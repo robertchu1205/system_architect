@@ -1,0 +1,319 @@
+variables:
+  TFSERVING_IMAGE: harbor.wzs.wistron.com.cn/tensorflow/serving:2.3.0
+  AI_SERVER_USER: wzsdat
+  IP: 172.30.52.10
+  LIMIT_CPU: 2
+  LIMIT_MEMORY: 2Gi
+  GRPC_NODE_PORT: 30002
+  REST_NODE_PORT: 30001
+  PROJECT_CODE: aoi-wzs-p3-ipbu-saiap
+  MULTI_MODELS: "true"
+  CONTAINER_PREFIX: dip
+  # GIT_SSL_NO_VERIFY: "true"
+  KUBECONFIG_DIR: /home/${AI_SERVER_USER}/.kube/config
+  TEMPLATE_PATH: /home/${AI_SERVER_USER}/dip-kustomize
+  AI_MODELS_PATH: /home/${AI_SERVER_USER}/ai-models
+  # AI_MODELS_PATH: /home/${AI_SERVER_USER}/ai-models/robert_test_1012
+  CHECKPOINT_CONFIG_PATH: /home/${AI_SERVER_USER}/checkpoint-config
+  KUSTOMIZE_GIT_CLONE_SSH_URL: git@gitlab-k8s.wzs.wistron.com.cn:oneai/dip-kustomize.git
+
+#cache:
+#  key: "PIPELINE-${CI_COMMIT_TAG}"
+#  untracked: true
+#  paths:
+#    - Model/
+#    - ROI/
+
+stages:
+  # - pre-config
+  - status
+  - sync-checkpoint-config
+  - sync-aimodels
+  - sync-template
+  - gen-tfserving
+
+# pre-config:
+#   variables:
+#     GIT_STRATEGY: none
+#   image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+#   #endeveit/docker-jq:latest
+#   stage: pre-config
+#   #artifacts:
+#   #  paths:
+#   #  - invoke.sh
+#   #  - server.json
+#   #  - jq
+#   #  expire_in: 1 day
+#   before_script:
+#     #- echo "$PRIVATE_KEY"
+#     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+#     - echo "$PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+#     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+#     - chmod 600 ~/.ssh/config
+#   script:
+#     - git init
+#     - git remote add origin $GIT_CLONE_SSH_URL
+#     - git config pack.windowMemory "100m"
+#     - git config pack.packSizeLimit "100m"
+#     - git config pack.threads "1"
+#     - git config pack.window "0"
+#     #- git config --global pack.deltaCacheSize "512m"
+#     - git config core.sparseCheckout true
+#     - echo "invoke.sh" >> .git/info/sparse-checkout
+#     - echo "server.json" >> .git/info/sparse-checkout
+#     - echo "jq" >> .git/info/sparse-checkout
+#     - git pull origin master
+#     - cat invoke.sh
+#     - cat server.json
+#     - chmod +x jq
+#     - cp jq /usr/bin
+#     - sh invoke.sh ${CI_COMMIT_TAG} ${TOKEN} ${CI_PROJECT_ID}
+#   after_script:
+#     - git remote rm origin
+#   tags:
+#     - OA
+#   only:
+#     refs:
+#       - /^Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]$/
+#   except:
+#     variables:
+#       - $IP
+
+status:
+  variables:
+    GIT_STRATEGY: none
+  image: apnar/rsync-server:latest
+  tags:
+    - robert-gitlab-runner
+  stage: status
+  before_script:
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - chmod 600 ~/.ssh/config
+  script:
+    - export WHICH_ENVSUBST=`ssh -tt ${AI_SERVER_USER}@${IP} which envsubst`
+    - echo ${IP}, ${WHICH_ENVSUBST}
+    - if [[ $WHICH_ENVSUBST =~ ^$ ]]; then exit 1; fi
+    - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} version
+    - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} get pod -l app=tfserving
+    - ssh -tt ${AI_SERVER_USER}@${IP} mkdir -p ${TEMPLATE_PATH} ${AI_MODELS_PATH} ${CHECKPOINT_CONFIG_PATH}
+    # - ssh -tt ${AI_SERVER_USER}@${IP} "ls /home && cd /tmp/ && touch test && exit"
+  only:
+    # refs:
+    #   - master
+    # variables:
+    #   - $CI_COMMIT_MESSAGE =~ /Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]/
+    refs:
+      - /^Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]$/
+    # variables:
+    #   - $IP
+
+sync-checkpoint-config:
+  variables:
+    GIT_STRATEGY: none
+  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  tags:
+    - robert-gitlab-runner
+  stage: sync-checkpoint-config
+  dependencies:
+    - status
+  before_script:
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - chmod 600 ~/.ssh/config
+    - git config --global pack.windowMemory "100m"
+    - git config --global pack.packSizeLimit "100m"
+    - git config --global pack.threads "1"
+    - git config --global pack.window "0"
+    #- git config --global pack.deltaCacheSize "512m"
+    - git init
+    - git remote add origin ${GIT_CLONE_CHECKPOINT_SSH_URL}
+    # - git config core.sparseCheckout true
+    # - echo "Model" >> .git/info/sparse-checkout
+    # - echo "server.json" >> .git/info/sparse-checkout
+    # - echo "processModel.sh" >> .git/info/sparse-checkout
+    - git pull origin master
+  script:
+    - ls -l -a .
+    - chmod +x ./yq
+    - cp ./yq /usr/bin
+    - cat ./Model_config/parsing_config_json.sh
+    - if [[ -f "./Model_config/config.yaml" ]]; then cat ./Model_config/config.yaml && cd Model_config && ./parsing_config_json.sh config.yaml models.config; else cat ./Model_config/config.json && cd Model_config && ./parsing_config_json.sh config.json models.config; fi
+    - cat models.config && rsync -rvzh --progress --delete models.config ${AI_SERVER_USER}@${IP}:${TEMPLATE_PATH}/models.config && cd ..
+    - rsync -rvzh --progress --delete . ${AI_SERVER_USER}@${IP}:${CHECKPOINT_CONFIG_PATH}
+    # - rsync -rvzh --progress --delete ./server.json ${IP}:/root/
+    # - rsync -rvzh --progress --delete ./processModel.sh ${IP}:/root/
+    # - rsync -rvzh --progress --delete current_ip ${IP}:/root/
+    # - echo ${MODEL_TEMP_PATH}
+    # - ssh -tt ${IP} sh /root/processModel.sh ${MODEL_PATH}  ${MODEL_TEMP_PATH}
+    - ssh -tt ${AI_SERVER_USER}@${IP} ls -a ${CHECKPOINT_CONFIG_PATH}
+    # - ssh -tt ${IP} docker exec -t ${CONTAINER_PREFIX}-tfserving rm -rf  /home/docker/code/app/core/models/cppModel
+    # - ssh -tt ${IP} docker cp ${MODEL_PATH} ${CONTAINER_PREFIX}-tfserving:/home/docker/code/app/core/models/
+    # - ssh -tt ${IP} docker exec -t ${CONTAINER_PREFIX}-tfserving ls -alh /home/docker/code/app/core/models/cppModel
+  after_script:
+    - git remote rm origin
+  only:
+    refs:
+      - /^Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]$/
+#     variables:
+#       - $IP
+  
+sync-aimodels:
+  variables:
+    GIT_STRATEGY: none
+  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  tags:
+    - robert-gitlab-runner
+  stage: sync-aimodels
+  dependencies:
+    - status
+  before_script:
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - chmod 600 ~/.ssh/config
+    - git config --global pack.windowMemory "100m"
+    - git config --global pack.packSizeLimit "100m"
+    - git config --global pack.threads "1"
+    - git config --global pack.window "0"
+    #- git config --global pack.deltaCacheSize "512m"
+    - git init
+    - git remote add origin ${GIT_CLONE_SSH_URL}
+    # - git config core.sparseCheckout true
+    # - echo "Model" >> .git/info/sparse-checkout
+    # - echo "server.json" >> .git/info/sparse-checkout
+    # - echo "processModel.sh" >> .git/info/sparse-checkout
+    - git pull origin master
+  script:
+    - ls -l -a .
+    - rsync -rvzh --progress --delete . ${AI_SERVER_USER}@${IP}:${AI_MODELS_PATH}
+    # - rsync -rvzh --progress --delete ./server.json ${IP}:/root/
+    # - rsync -rvzh --progress --delete ./processModel.sh ${IP}:/root/
+    # - rsync -rvzh --progress --delete current_ip ${IP}:/root/
+    # - echo ${MODEL_TEMP_PATH}
+    # - ssh -tt ${IP} sh /root/processModel.sh ${MODEL_PATH}  ${MODEL_TEMP_PATH}
+    - ssh -tt ${AI_SERVER_USER}@${IP} ls -a ${AI_MODELS_PATH}
+    # - ssh -tt ${IP} docker exec -t ${CONTAINER_PREFIX}-tfserving rm -rf  /home/docker/code/app/core/models/cppModel
+    # - ssh -tt ${IP} docker cp ${MODEL_PATH} ${CONTAINER_PREFIX}-tfserving:/home/docker/code/app/core/models/
+    # - ssh -tt ${IP} docker exec -t ${CONTAINER_PREFIX}-tfserving ls -alh /home/docker/code/app/core/models/cppModel
+  after_script:
+    - git remote rm origin
+  only:
+    refs:
+      - /^Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]$/
+#     variables:
+#       - $IP
+
+if-many-models:
+  extends: .sync-template
+  only:
+    variables: [ $MULTI_MODELS == "true" ]
+  variables:
+    TFSERVING_YAML: tfserving_many.yaml
+
+if-only-a-model:
+  extends: .sync-template
+  only:
+    variables: [ $MULTI_MODELS == "false" ]
+  variables:
+    TFSERVING_YAML: tfserving.yaml
+
+.sync-template:
+  variables:
+    GIT_STRATEGY: none
+  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  tags:
+    - robert-gitlab-runner
+  stage: sync-template
+  dependencies:
+    - sync-aimodels
+  before_script:
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - chmod 600 ~/.ssh/config
+    - git config --global pack.windowMemory "100m"
+    - git config --global pack.packSizeLimit "100m"
+    - git config --global pack.threads "1"
+    - git config --global pack.window "0"
+    #- git config --global pack.deltaCacheSize "512m"
+    - git init
+    - git remote add origin ${KUSTOMIZE_GIT_CLONE_SSH_URL}
+    # - git config core.sparseCheckout true
+    # - echo "Model" >> .git/info/sparse-checkout
+    # - echo "server.json" >> .git/info/sparse-checkout
+    # - echo "processModel.sh" >> .git/info/sparse-checkout
+    - git pull origin master
+  script:
+    - ls -l -a .
+    - rsync -rvzh --progress . ${AI_SERVER_USER}@${IP}:${TEMPLATE_PATH}
+    # - rsync -rvzh --progress --delete ./server.json ${IP}:/root/
+    # - rsync -rvzh --progress --delete ./processModel.sh ${IP}:/root/
+    # - rsync -rvzh --progress --delete current_ip ${IP}:/root/
+    # - echo ${MODEL_TEMP_PATH}
+    # - ssh -tt ${IP} sh /root/processModel.sh ${MODEL_PATH}  ${MODEL_TEMP_PATH}
+    - ssh -tt ${AI_SERVER_USER}@${IP} ls -a ${TEMPLATE_PATH}
+    ####### to generate models.config from config.json here
+    # - ssh -tt ${AI_SERVER_USER}@${IP} cat ${TEMPLATE_PATH}/tfserving/parsing_config_json.sh
+    # - ssh -tt ${AI_SERVER_USER}@${IP} "chmod +x ${TEMPLATE_PATH}/tfserving/jq && cp ${TEMPLATE_PATH}/tfserving/jq /usr/bin && sh ${TEMPLATE_PATH}/tfserving/parsing_config_json.sh ${CHECKPOINT_CONFIG_PATH}/Model_config/config.json ${AI_MODELS_PATH}/models.config"
+    # from
+    # - ssh -tt ${AI_SERVER_USER}@${IP} ls -a ${CHECKPOINT_CONFIG_PATH}/Model_config/config.json
+    # - ssh -tt ${AI_SERVER_USER}@${IP} ls -a ${CHECKPOINT_CONFIG_PATH}/Model_config/config.yaml
+    # target
+    - ssh -tt ${AI_SERVER_USER}@${IP} cp ${TEMPLATE_PATH}/models.config ${AI_MODELS_PATH}/models.config
+    - ssh -tt ${AI_SERVER_USER}@${IP} cat ${AI_MODELS_PATH}/models.config
+    - echo ${TFSERVING_YAML}
+    - ssh -tt ${AI_SERVER_USER}@${IP} "export aiserverip=${IP} && export containerprefix=${CONTAINER_PREFIX} && export projectcode=${PROJECT_CODE} && export limitscpu=${LIMIT_CPU} && export limitsmemory=${LIMIT_MEMORY} && export aimodels=${AI_MODELS_PATH} && export modelconfig=${TEMPLATE_PATH}/tfserving && export tfservingimage=${TFSERVING_IMAGE} && export grpcnodeport=${GRPC_NODE_PORT} && export restnodeport=${REST_NODE_PORT} && envsubst < ${TEMPLATE_PATH}/tfserving/${TFSERVING_YAML} > ${TEMPLATE_PATH}/tfserving/${CI_COMMIT_SHORT_SHA}.yaml"
+    # - ssh -tt ${IP} docker exec -t ${CONTAINER_PREFIX}-tfserving rm -rf  /home/docker/code/app/core/models/cppModel
+    # - ssh -tt ${IP} docker cp ${MODEL_PATH} ${CONTAINER_PREFIX}-tfserving:/home/docker/code/app/core/models/
+    # - ssh -tt ${IP} docker exec -t ${CONTAINER_PREFIX}-tfserving ls -alh /home/docker/code/app/core/models/cppModel
+    - ssh -tt ${AI_SERVER_USER}@${IP} "ls -a ${TEMPLATE_PATH} && cat ${TEMPLATE_PATH}/tfserving/${CI_COMMIT_SHORT_SHA}.yaml"
+  after_script:
+    - git remote rm origin
+  only:
+    refs:
+      - /^Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]$/
+#     variables:
+#       - $IP
+      
+gen-tfserving:
+  variables:
+    GIT_STRATEGY: none
+  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  tags:
+    - robert-gitlab-runner
+  stage: gen-tfserving
+  dependencies:
+    - if-many-models
+    - if-only-a-model
+  before_script:
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - echo "$PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - chmod 600 ~/.ssh/config
+  script:
+    # - echo "version.py" >> .git/info/sparse-checkout
+    # - ssh -tt ${AI_SERVER_USER}@${IP} [ ! -f "${UTILS_PATH}version.py" ] && rsync -rvzh --progress version.py ${IP}:${UTILS_PATH}
+    # - ssh -tt ${AI_SERVER_USER}@${IP} "cd ${UTILS_PATH} && python version.py"
+    - ssh -tt ${AI_SERVER_USER}@${IP} ls -a ${AI_MODELS_PATH}
+    - ssh -tt ${AI_SERVER_USER}@${IP} cat ${TEMPLATE_PATH}/tfserving/${CI_COMMIT_SHORT_SHA}.yaml
+    # - ssh -tt ${AI_SERVER_USER}@${IP} docker cp ${VERSION_INFO_PATH} ${CONTAINER_PREFIX}-tfserving:/home/docker/code/app/
+    # - ssh -tt ${AI_SERVER_USER}@${IP} docker exec -t ${CONTAINER_PREFIX}-tfserving ls -alh /home/docker/code/app/git_version/
+    # - ssh -tt ${AI_SERVER_USER}@${IP} docker restart ${CONTAINER_PREFIX}-tfserving
+    - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} apply -f ${TEMPLATE_PATH}/tfserving/${CI_COMMIT_SHORT_SHA}.yaml
+    - ssh -tt ${AI_SERVER_USER}@${IP} sleep 150
+    - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} get deploy ${CONTAINER_PREFIX}-tfserving -o wide
+    - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} describe deploy ${CONTAINER_PREFIX}-tfserving
+    - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} describe pod -l app=tfserving
+    - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} get svc ${CONTAINER_PREFIX}-tfserving -o wide
+    - export TFSERVING_STATUS=`ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} get deploy ${CONTAINER_PREFIX}-tfserving`
+    - if [[ $TFSERVING_STATUS =~ ^.*0/1.*$ ]]; then exit 1; fi
+    # - ssh -tt ${AI_SERVER_USER}@${IP} docker logs ${CONTAINER_PREFIX}-tfserving
+    # - ssh -tt ${AI_SERVER_USER}@${IP} nvidia-smi
+  only:
+    refs:
+      - /^Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]$/
+#     variables:
+#       - $IP

@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: image-dataset-mysql-pv-claim
+  labels:
+    app: mariadb
+    function: aoi
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-dataset-mariadb
+  labels:
+    app: mariadb
+    function: aoi
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: mysql
+    # nodePort: 31234
+  selector:
+    app: mariadb
+    function: aoi
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-dataset-mariadb
+  labels:
+    app: mariadb
+    function: aoi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+      function: aoi
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mariadb
+        function: aoi
+    spec:
+      containers:
+      - env:
+        - name: TZ
+          value: Asia/Taipei
+        envFrom:
+        - secretRef: 
+            name: image-dataset-rootpassword
+        image: mariadb
+        name: mysql
+        ports:
+        - containerPort: 3306
+          name: mysql
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mysql-storage
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: image-dataset-mysql-pv-claim

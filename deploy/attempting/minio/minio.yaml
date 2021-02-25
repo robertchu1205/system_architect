@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  # This name uniquely identifies the PVC. This is used in deployment.
+  name: minio-pv-claim
+spec:
+  # Read more about access modes here: http://kubernetes.io/docs/user-guide/persistent-volumes/#access-modes
+  accessModes:
+    # The volume is mounted as read-write by a single node
+    - ReadWriteOnce
+  storageClassName: openebs-jiva-default
+  resources:
+    # This is the request for storage. Should be available in the cluster.
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # This name uniquely identifies the Deployment
+  name: minio
+spec:
+  strategy: 
+    # Specifies the strategy used to replace old Pods by new ones
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        # This label is used as a selector in Service definition
+        app: minio
+    spec:
+      containers:
+      - name: minio
+        image: minio/minio
+        imagePullPolicy: IfNotPresent
+        args:
+        - server
+        - /data
+        volumeMounts:
+          # Volume 'data' is mounted to path '/data'
+          - name: data
+            mountPath: "/data"
+        ports:
+        - name: ui
+          containerPort: 9000
+        envFrom:
+        - secretRef: 
+            name: minio-secret
+        # Liveness probe detects situations where MinIO server instance
+        # is not working properly and needs restart. Kubernetes automatically
+        # restarts the pods if liveness checks fail.
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: ui
+          initialDelaySeconds: 120
+          periodSeconds: 20
+        # Readiness probe detects situations when MinIO server instance
+        # is not ready to accept traffic. Kubernetes doesn't forward
+        # traffic to the pod while readiness checks fail.
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: ui
+          initialDelaySeconds: 120
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: 2
+            memory: 200Mi
+          limits:
+            cpu: 2
+            memory: 1Gi
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          # Name of the PVC created earlier
+          claimName: minio-pv-claim
+        # hostPath:
+        #   path: /mnt/saiap-minio-test
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # This name uniquely identifies the service
+  name: minio-service
+spec:
+  type: LoadBalancer
+  externalIPs: 
+  - 10.41.65.77
+  ports:
+    # Port for externalIPs For example: 10.41.65.77:9999 is the address of frondend website
+    # S3_ENDPOINT in tfserving should be the same port as below
+    # For example: minio-service.default.svc.cluster.local:9999 
+    - port: 9999
+      targetPort: 9000
+      protocol: TCP
+  selector:
+    # Looks for labels `app:minio` in the namespace and applies the spec
+    app: minio

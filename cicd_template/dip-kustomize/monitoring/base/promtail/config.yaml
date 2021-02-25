@@ -1,0 +1,87 @@
+server:
+  http_listen_port: 31001
+clients:
+- url: http://loki:3100/api/prom/push
+  external_labels: 
+    logsource: promtail
+client:
+  backoff_config:
+    maxbackoff: 5s
+    maxretries: 20
+    minbackoff: 100ms
+  batchsize: 102400
+  batchwait: 1s
+  external_labels:
+    producer: promtail
+  timeout: 10s
+positions:
+  filename: /var/log/positions.yaml
+target_config:
+  sync_period: 10s
+scrape_configs:
+- job_name: log
+  entry_parser: docker
+  static_configs:
+  - targets:
+    - localhost
+    labels:
+      __path__: /var/log/containers/*gateway*.log
+  pipeline_stages:
+  - docker: {}
+  - json:
+      expressions:
+        logger:
+        severity:
+        project:
+        component:
+        pred_class:
+        pred:
+        confidence:
+        ng_model_name:
+        location:
+        filename:
+        timestamp:
+        SN:
+        eagle:
+        part_name:
+        degree:
+        capacity:
+        voltage:
+        index:
+        date:
+        client_ip:
+        req_time:
+        res_time:
+        msg:
+        own_pred_class:
+        own_confidence:
+        req_secs_taken:
+        PanelNo:
+  - labels:
+      logger:
+      severity:
+      project:
+      component:
+      pred_class:
+      pred:
+      confidence:
+      ng_model_name:
+      location:
+      filename:
+      timestamp:
+      SN:
+      eagle:
+      part_name:
+      degree:
+      capacity:
+      voltage:
+      index:
+      date:
+      client_ip:
+      req_time:
+      res_time:
+      msg:
+      own_pred_class:
+      own_confidence:
+      req_secs_taken:
+      PanelNo:

@@ -1,0 +1,65 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: pull-data-to-metadata
+  labels: 
+    app: pull-data-to-metadata
+spec:
+  schedule: 55 10-20/2 * * *
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: pull-ftp
+            image: wget
+            command:
+            - sh
+            - /pull-ftp.sh
+            envFrom:
+            - configMapRef:
+                name: ftp-cronjob-config
+            - secretRef: 
+                name: data-center-ftp-secret  
+            resources:
+              requests:
+                cpu: 50m
+                memory: 50M
+              limits: 
+                cpu: 200m
+                memory: 200M
+            volumeMounts:
+            - name: sh-py
+              subPath: pull-ftp.sh
+              mountPath: /pull-ftp.sh
+          - name: to-metadata
+            image: python
+            command:
+            - /bin/sh
+            - -ec
+            # - pip install -i https://pypi.tuna.tsinghua.edu.cn/simple Pillow
+            - sleep 100 && python /to-metadata.py
+            envFrom:
+            - configMapRef:
+                name: ftp-cronjob-config
+            - secretRef: 
+                name: image-dataset-db-secret
+            resources:
+              requests:
+                cpu: 100m
+                memory: 100M
+              limits: 
+                cpu: 400m
+                memory: 400M
+            volumeMounts:
+            - name: sh-py
+              subPath: to-metadata.py
+              mountPath: /to-metadata.py
+          restartPolicy: Never 
+          volumes: 
+          - name: sh-py
+            configMap:
+              name: pull-ftp-to-metadata

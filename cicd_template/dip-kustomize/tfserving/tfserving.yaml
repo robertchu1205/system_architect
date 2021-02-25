@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: $containerprefix-tfserving
+  labels: 
+    prefix: $containerprefix
+    app: tfserving
+    project: $projectcode
+spec:
+  type: NodePort
+  externalIPs:
+  - $aiserverip
+  selector:
+    prefix: $containerprefix
+    app: tfserving
+    project: $projectcode
+  ports:
+  - name: grpc
+    port: 8500
+    targetPort: grpc
+    nodePort: $grpcnodeport
+  - name: rest
+    port: 8501
+    targetPort: rest
+    nodePort: $restnodeport
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $containerprefix-tfserving
+  labels:
+    prefix: $containerprefix
+    app: tfserving
+    project: $projectcode
+spec:
+  selector: 
+    matchLabels: 
+      prefix: $containerprefix
+      app: tfserving
+      project: $projectcode
+  strategy:
+    type: RollingUpdate
+  replicas: 1
+  template:
+    metadata: 
+      labels: 
+        prefix: $containerprefix
+        app: tfserving
+        project: $projectcode
+    spec:
+      restartPolicy: Always
+      containers: 
+      - name: tfserving
+        image: $tfservingimage
+        imagePullPolicy: IfNotPresent
+        command:
+        # - /usr/bin/tf_serving_entrypoint.sh
+        - tensorflow_model_server
+        args:
+        # - --entrypoint=tensorflow_model_server
+        # - --model_config_file=/models/models.config
+        - --model_name=default
+        - --model_base_path=/models
+        - --rest_api_port=8501
+        - --monitoring_config_file=/model_config/monitoring_config.txt
+        - --batching_parameters_file=/model_config/batching_pars.txt
+        - --model_config_file_poll_wait_seconds=60
+        - --file_system_poll_wait_seconds=65
+        - --allow_version_labels_for_unavailable_models=true
+        - --enable_batching=true
+        - --enable_model_warmup=true
+        - --tensorflow_intra_op_parallelism=$(CPULIMITS)
+        - --tensorflow_inter_op_parallelism=$(CPULIMITS)
+        env:
+        - name: CPULIMITS
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+        ports:
+        - name: grpc
+          containerPort: 8500
+        - name: rest
+          containerPort: 8501
+        volumeMounts:
+        - name: ai-models
+          mountPath: /models
+        - name: model-config
+          mountPath: /model_config
+        livenessProbe:
+          httpGet:
+            path: /monitoring/prometheus/metrics
+            port: rest
+        readinessProbe:
+          httpGet:
+            path: /monitoring/prometheus/metrics
+            port: rest
+        resources:
+          requests:
+            cpu: 1
+            memory: 1Gi
+          limits:
+            cpu: $limitscpu
+            memory: $limitsmemory
+      volumes:
+      - name: model-config
+        hostPath:
+          path: $modelconfig
+      - name: ai-models
+        hostPath:
+          path: $aimodels

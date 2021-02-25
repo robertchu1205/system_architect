@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfserving
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: clone-models
+        image: harbor.wzs.wistron.com.cn/datteam/alpine/git-lfs
+        command:
+        - sh
+        - -c
+        - git config --global http.sslVerify false && git clone https://$username:$token@10.41.241.138/aoi-wzs-p3-dip-prewave-saiap/models.git /models
+        env:
+        - name: username
+          valueFrom:
+            secretKeyRef:
+              name: gitlab-access-token
+              key: username
+        - name: token
+          valueFrom:
+            secretKeyRef:
+              name: gitlab-access-token
+              key: MODELdeployToken
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+        volumeMounts:
+        - name: models
+          mountPath: /models
+      containers:
+      - name: pull-models
+        image: harbor.wzs.wistron.com.cn/datteam/alpine/git-lfs
+        workingDir: /models
+        command:
+        - sh
+        - -c
+        - git config --global http.sslVerify false && while true; do git pull; sleep 60; done
+        volumeMounts:
+        - name: models
+          mountPath: /models
+      - name: tfserving
+        volumeMounts:
+        - name: models
+          mountPath: /models
+        - name: models
+          mountPath: /model_config

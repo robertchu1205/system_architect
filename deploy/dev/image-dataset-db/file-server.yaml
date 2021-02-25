@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: file-service
+spec:
+  ports:
+  - port: 8008
+    targetPort: fs
+    nodePort: 30038
+  selector:
+    app: file-service
+    function: aoi
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: file-service
+    function: aoi
+  name: file-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      function: aoi
+      app: file-service
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        function: aoi
+        app: file-service
+    spec:
+      containers:
+      - args:
+        - -c
+        - cd /base && python -m http.server 8008
+        command:
+        - /bin/sh
+        image: harbor.wzs.wistron.com.cn/datteam/python:3.7-alpine
+        imagePullPolicy: IfNotPresent
+        name: python
+        ports:
+        - name: fs
+          containerPort: 8008
+        resources:
+          limits:
+            cpu: 1m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: /base/data/swpc
+          name: local-swpc
+        - mountPath: /base/data/aoi-wzs-p3-dip-prewave-saiap
+          subPath: aoi-wzs-p3-dip-prewave-saiap
+          name: raid-data
+        - mountPath: /base/data/aoi-wzs-p1-dip-fa-nvidia
+          subPath: aoi-wzs-p1-dip-fa-nvidia
+          name: raid-data
+        - mountPath: /base/data-center
+          name: datacenter-nfs
+        # - mountPath: /base/data-center/swpc
+        #   name: datacenter-swpc
+      volumes:
+      - name: local-swpc
+        persistentVolumeClaim:
+          claimName: raid-swpc
+      - name: raid-data
+        persistentVolumeClaim:
+          claimName: dataset-local
+      - name: datacenter-nfs
+        persistentVolumeClaim:
+          claimName: datacenter-nfs
+      # - name: datacenter-swpc
+      #   persistentVolumeClaim:
+      #     claimName: datacenter-swpc

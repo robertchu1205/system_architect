@@ -1,0 +1,29 @@
+// http post request json format
+{
+    "instances": [
+        // filename: CN01W26NWS20004B02IPA00_EAGLE3550DM010010002_PT4505_AluCap_270_820_NA_0
+        {
+            "filename": "CN01W26NWS20004B02IPA00_EAGLE3550DM010010002_PT4505_AluCap_270_820_NA_0",
+            "component": "AluCap",
+            "degree": "270",
+            "capacity": "820",
+            "voltage": "NA",
+            "index": "NA",
+            "image": {
+                "b64": "IMAGE_BYTE_STRING"
+            }
+        },
+        // filename: CN01W26NWS20004B02IPA00_EAGLE3550DM010010002_PT4505_ElecCap_270_NA_NA_1
+        {
+            "filename": "CN01W26NWS20004B02IPA00_EAGLE3550DM010010002_PT4505_ElecCap_270_NA_NA_1",
+            "component": "ElecCap",
+            "degree": "270",
+            "capacity": "NA",
+            "voltage": "NA",
+            "index": "1",
+            "image": {
+                "b64": "IMAGE_BYTE_STRING"
+            }
+        }
+    ]
+}

@@ -1,0 +1,215 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aoi-wzs-p3-dip-prewave-saiap-prometheus-config
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s 
+      evaluation_interval: 5s
+      external_labels:
+        monitor: 'codelab-monitor'
+
+    scrape_configs:
+      - job_name: 'prometheus'
+        kubernetes_sd_configs:
+        - role: prometheus
+        scrape_interval: 5s
+        static_configs:
+          - targets: ['localhost:9090'] 
+
+      - job_name: 'tfserving'
+        kubernetes_sd_configs:
+        - role: models
+        scrape_interval: 20s
+        metrics_path: '/monitoring/prometheus/metrics'
+        static_configs:
+          - targets: ['aoi-wzs-p3-dip-prewave-saiap-tfserving:32211']
+
+      # - job_name: 'node_exporter'
+      #   scrape_interval: 5s
+      #   static_configs:
+      #     - targets: ['localhost:9100']
+
+      - job_name: 'gateway'
+        kubernetes_sd_configs:
+        - role: gateway
+        scrape_interval: 30s
+        metrics_path: '/metrics'
+        static_configs:
+        - targets: ['aoi-wzs-p3-dip-prewave-saiap-gateway:3333']
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+---
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: models
+#   labels:
+#     app: prometheus
+# spec:
+#   selector:
+#     matchLabels:
+#       app: tfserving
+#   endpoints:
+#   - port: "rest"
+# ---
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: gateway
+#   labels:
+#     app: prometheus
+# spec:
+#   selector:
+#     matchLabels:
+#       app: gateway
+#   endpoints:
+#   - port: "rest"
+# ---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: prometheus
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: harbor.wzs.wistron.com.cn/prometheus/prometheus:v2.10.0
+        command:
+        - /bin/prometheus
+        args:
+        - "--config.file=/prometheus.yml"
+        - "--storage.tsdb.path=/prometheus/data"
+        volumeMounts: 
+        # Actual used volume in this pod
+        - name: prometheus-config
+          mountPath: /prometheus.yml
+          # subPath is to avoid make a new folder above the yml 
+          subPath: prometheus.yml
+        - name: prometheus-data
+          mountPath: /prometheus/data
+        resources:
+          requests:
+            cpu: 200m
+            memory: 200Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
+        ports:
+        - containerPort: 9090
+      volumes: 
+      # Back up data from container in local server
+      - name: prometheus-config
+        configMap:
+          name: aoi-wzs-p3-dip-prewave-saiap-prometheus-config
+      - name: prometheus-data
+        hostPath:
+        # the directory below should "chown nobody/nogroup", not be root/root
+          path: /d/prometheus-data
+  # podMetadata:
+  #   labels:
+  #     role: monitoring
+  #     kind: Prometheus
+  # image: harbor.wzs.wistron.com.cn/prometheus/prometheus:v2.10.0
+  # serviceAccountName: prometheus
+  # serviceMonitorSelector:
+  #   matchLabels:
+  #     prometheus: prometheus
+  #     kind: Prometheus
+  # podMonitorSelector:
+  #   matchLabels:
+  #     prometheus: prometheus
+  #     kind: Prometheus
+  # enableAdminAPI: false
+  # retentionSize: 1GB
+  # storage:
+  #   volumeClaimTemplate:
+  #     spec:
+  #       accessModes:
+  #       - ReadWriteOnce
+  #       resources:
+  #         requests:
+  #           storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+spec:
+  type: NodePort
+  externalIPs: 
+  - 172.30.52.10
+  selector:
+    app: prometheus
+  ports:
+  - name: prometheus
+    port: 9090
+    targetPort: 9090
+    nodePort: 30090
+# ---
+# apiVersion: monitoring.coreos.com/v1
+# kind: PodMonitor
+# metadata:
+#   name: node-exporter
+#   labels:
+#     prometheus: prometheus
+# spec:
+#   namespaceSelector:
+#     matchNames:
+#     - kube-system
+#   selector:
+#     matchLabels:
+#       app: node-exporter
+#   podMetricsEndpoints:
+#   - targetPort: 9100

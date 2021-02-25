@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- TFserving.yaml
+commonLabels:
+  app: tfserving
+images:
+- name: serving
+  newName: harbor.wzs.wistron.com.cn/tensorflow/serving
+  newTag: "2.2.0"

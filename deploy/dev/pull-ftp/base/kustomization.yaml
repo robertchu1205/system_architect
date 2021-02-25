@@ -1,0 +1,32 @@
+namePrefix: aoi-wzs-p3-dip-prewave-saiap-
+resources:
+- cronjob.yaml  
+commonLabels:
+  role: image-dataset-db 
+  data: aoi-wzs-p3-dip-prewave-saiap
+configMapGenerator:
+- name: ftp-cronjob-config
+  envs:
+  - ftp-cronjob-config
+- name: pull-ftp-to-metadata
+  files:
+  - file-to-cm/pull-ftp.sh
+  - file-to-cm/to-metadata.py
+secretGenerator:
+- name: data-center-ftp-secret
+  literals:
+  - USER=$USER
+  - PASSWORD=$PASSWORD    
+- name: image-dataset-db-secret
+  literals:
+  - DB_USER=$DB_USER
+  - DB_PASSWORD=$DB_PASSWORD
+images:
+- name: wget
+  newName:  harbor.wzs.wistron.com.cn/datteam/wget
+  newTag: "latest"
+- name: python
+  newName:  harbor.wzs.wistron.com.cn/datteam/image-dataset-db/to-metadata
+  newTag: "20210118"
+patchesStrategicMerge:
+- cj_volume_volumeMounts.yaml

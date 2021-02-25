@@ -1,0 +1,28 @@
+variables:
+    HARBOR_REGISTRY: "harbor.wzs.wistron.com.cn"
+    IMAGE_NAME: "datteam/aoi-wzs-p3-dip-prewave-saiap/daily-metrics"
+    GIT_SSL_NO_VERIFY: "true"
+  
+stages:
+-   build
+  
+build-image:
+    stage: build
+    image:
+        name: harbor.wzs.wistron.com.cn/kaniko-project/executor:debug
+        entrypoint: [""]
+    before_script:
+    -   echo $HARBOR_LOGIN > /kaniko/.docker/config.json
+    retry: 2
+    script:
+    -   TAG=${CI_COMMIT_SHORT_SHA}
+    -   echo TAG:$TAG
+    -   echo "starting building latest image"
+    -   |
+        /kaniko/executor \
+        --dockerfile=${CI_PROJECT_DIR}/Dockerfile \
+        --context=${CI_PROJECT_DIR} \
+        --destination=${HARBOR_REGISTRY}/${IMAGE_NAME}:${TAG} \
+        --destination=${HARBOR_REGISTRY}/${IMAGE_NAME}:latest \
+        --insecure \
+        --insecure-pull

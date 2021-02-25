@@ -1,0 +1,23 @@
+# apiVersion: kustomize.config.k8s.io/v1beta1
+# kind: Kustomization
+bases:
+- ../../base
+commonLabels:
+  app: tfserving
+  modelsfrom: sftp
+configMapGenerator:
+- name: model-config
+  files:
+  - batching_pars.txt
+  - monitoring_config.txt
+patchesStrategicMerge:
+- deployment_volume_volumeMounts.yaml
+# - externalIPs.yaml
+# patches:
+# - patch: |-
+#     - op: replace
+#       path: /spec/template/spec/containers/0/resources/limits/cpu
+#       value: "5"
+#   target:
+#     kind: Deployment
+#     name: tfserving

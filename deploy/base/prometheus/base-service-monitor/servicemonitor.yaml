@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: models
+  labels:
+    prometheus: $(PROMETHEUS_NAME)
+spec:
+  selector:
+    matchLabels:
+      app: tfserving
+  endpoints:
+  - port: "gw"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gateway
+  labels:
+    prometheus: $(PROMETHEUS_NAME)
+spec:
+  selector:
+    matchLabels:
+      app: gateway
+  endpoints:
+  - port: "rest"

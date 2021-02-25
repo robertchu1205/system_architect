@@ -1,0 +1,131 @@
+env_setting:
+  project_code: aoi-wzs-p3-dip-prewave-saiap
+  tfs_method: grpc
+  image_format: b64
+  grpc_batch : 300
+  image_input_height : 96 
+  image_input_width : 96  
+  signature_name: serving_default
+  tfserving_grpc: 10.41.242.29:30510
+  tfserving_rest: 10.41.242.29:30511
+  model_input_name: 
+  - image
+  - degree
+  - SN
+  - capacity
+  - component
+  - voltage
+  model_output_name: 
+  - pred_class
+  - confidence
+  request_post_file: True
+  extra_infos_to_return: 
+  - degree
+  - capacity
+  login_token: logintoken 
+  register_token: deprecated_api
+  image_coding: b64_coding
+  image_saving: False
+  image_saving_ext: png
+  check_checkpoint: False
+  process_api:
+    protocol: rest
+    grpc_url: 10.41.241.230:30124
+    rest_url: 10.41.241.230:30963
+    pre_process:
+    - dip_parse_binary_files
+    post_process:
+    - dip_merge_answers
+  comps_to_match_m1_color: 
+  - SATA
+  - PCI
+  comps_to_match_m1: 
+  - L
+model_setting:
+  Cap:
+    specific_url:
+    - 10.41.242.29:30511
+    - 10.41.242.29:30511
+    - 10.41.242.29:30512
+    model_name: 
+    - test 
+    - label
+    - capacitor 
+    version_label: 
+    con_threshold:
+    - 0.9
+    - 0.9
+    - 0.9
+    data_type: 
+    # - "0" : "NG"
+    #   "1" : "OK"
+    # - "0" : "0"
+    #   "1" : "180"
+    #   "2" : "270" 
+    #   "3" : "90" 
+    # - "0" : "270" 
+    #   "1" : "820"
+  ElecCap:
+    model_name: 
+    - eleccap-m1 
+    - eleccap-degree 
+    version_label: 
+    con_threshold:
+    data_type: 
+    - "0" : "NG"
+      "1" : "OK"
+    - "0" : "0"
+      "1" : "180"
+      "2" : "270" 
+      "3" : "90" 
+  S:
+    model_name: 
+    - test
+    version_label: 
+    con_threshold:
+    data_type: 
+    # - "0" : "NG"
+    #   "1" : "OK" 
+  SATA:
+    model_name:
+    - SATA-m1-color
+    version_label: 
+    con_threshold:
+    data_type: 
+    - "0" : "Black"
+      "1" : "Blue"
+      "2" : "NG" 
+      "3" : "White"
+  PCI:
+    model_name:
+    - PCI-m1-color
+    version_label: 
+    con_threshold:
+    data_type: 
+    - "0" : "Black"
+      "1" : "Blue"
+      "2" : "NG" 
+      "3" : "White"
+test_model_setting:
+  outcome_choice: background
+  tfserving_grpc: 10.41.242.29:30510
+  tfserving_rest: 10.41.242.29:30511
+  model_setting: 
+    Cap/S/ElecCap: 
+      model_input_name: 
+      - image
+      - degree
+      - SN
+      - capacity
+      - component
+      - voltage
+      model_output_name: 
+      - pred_class
+      - confidence
+      model_name: 
+      - jumper
+      version_label: 
+      con_threshold:
+      data_type:
+      - "0" : "NG"
+        "1" : "OK" 

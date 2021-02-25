@@ -1,0 +1,25 @@
+bases:
+- ../../base
+# commonLabels:
+#   project: aoi-wcd-fa-saiap
+images:
+- name: harbor.wzs.wistron.com.cn/datteam/aoi-wzs-p3-dip-prewave-saiap/gateway:latest
+  newName: harbor.wzs.wistron.com.cn/datteam/aoi-wcd-fa-saiap/gateway
+  newTag: "58fd2f63"
+patchesStrategicMerge:
+# - externalIPs.yaml
+- deployment_volume_volumeMounts.yaml
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "2"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 1Gi
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: 500Mi
+  target:
+    kind: Deployment
+    name: gateway

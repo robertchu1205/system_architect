@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfserving
+spec:
+  template: 
+    spec:
+      containers: 
+      - name: tfserving
+        volumeMounts:
+          - name: ai-models
+            subPath: models
+            mountPath: /models
+      volumes:
+      - name: ai-models
+        persistentVolumeClaim: 
+          claimName: ai-ftp
+      - name: model-config
+        configMap:
+          name: model-config

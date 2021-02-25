@@ -1,0 +1,100 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: pull-ftp-from-data-center
+  labels: 
+    app: pull-ftp
+spec:
+  schedule: 55 * * * *
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: pull-ftp
+            image: wget
+            command:
+            - sh
+            - /pull-ftp.sh
+            envFrom:
+            - secretRef: 
+                name: data-center-ftp
+            resources:
+              requests:
+                cpu: 50m
+                memory: 50M
+              limits: 
+                cpu: 100m
+                memory: 100M
+            volumeMounts:
+            - name: sh-py
+              subPath: pull-ftp.sh
+              mountPath: /pull-ftp.sh
+            - name: data-volume
+              mountPath: /data
+          volumes: 
+          - name: data-volume
+            hostPath: 
+              path: /home/wzsdat/dip-prewave-saiap
+          - name: sh-py
+            configMap:
+              name: pull-ftp-to-metadata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: file-service
+spec:
+  ports:
+  - nodePort: 30038
+    port: 8008
+    targetPort: fs
+  selector:
+    app: file-service
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: file-service
+  name: file-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: file-service
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: file-service
+    spec:
+      containers:
+      - args:
+        - -c
+        - cd /data && python -m http.server 8008
+        command:
+        - /bin/sh
+        image: file-server
+        imagePullPolicy: IfNotPresent
+        name: python
+        ports:
+        - name: fs
+          containerPort: 8008
+        resources:
+          limits:
+            cpu: 50m
+            memory: 500M
+        volumeMounts:
+        - mountPath: /data
+          name: data-volume
+      volumes:
+        - name: data-volume
+          hostPath: 
+            path: /home/wzsdat/dip-prewave-saiap

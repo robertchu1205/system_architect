@@ -1,0 +1,239 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    cattle.io/creator: norman
+    workload.user.cattle.io/workloadselector: deployment-dgx2-ftp-dgx2-aoi-ftp-prd
+  name: dgx2-aoi-ftp-prd
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: deployment-dgx2-ftp-dgx2-aoi-ftp-prd
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        workload.user.cattle.io/workloadselector: deployment-dgx2-ftp-dgx2-aoi-ftp-prd
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - armk8swapp01
+                - armk8swapp03
+                - armk8swapp05
+              - key: node-role.kubernetes.io/worker
+                operator: In
+                values:
+                - "true"
+      containers:
+      - env:
+        - name: CONNECT_FROM_PORT_30160
+          value: "YES"
+        - name: FILE_OPEN_MODE
+          value: "0777"
+        - name: FTP_DATA_PORT
+          value: "30160"
+        - name: LOCAL_UMASK
+          value: "022"
+        - name: PASV_ADDRESS
+          value: 10.41.241.5
+        - name: PASV_ADDR_RESOLVE
+          value: "NO"
+        - name: PASV_ENABLE
+          value: "YES"
+        - name: PASV_MAX_PORT
+          value: "30159"
+        - name: PASV_MIN_PORT
+          value: "30122"
+        - name: REVERSE_LOOKUP_ENABLE
+          value: "NO"
+        image: vsftpd
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 2
+          successThreshold: 1
+          tcpSocket:
+            port: 21
+          timeoutSeconds: 2
+        name: dgx2-aoi-ftp-prd
+        ports:
+        - containerPort: 21
+          name: ftp21
+          protocol: TCP
+        - containerPort: 30160
+          name: ftpdata30160
+          protocol: TCP
+        - containerPort: 30122
+          name: pasv30122
+          protocol: TCP
+        - containerPort: 30123
+          name: pasv30123
+          protocol: TCP
+        - containerPort: 30124
+          name: pasv30124
+          protocol: TCP
+        - containerPort: 30125
+          name: pasv30125
+          protocol: TCP
+        - containerPort: 30126
+          name: pasv30126
+          protocol: TCP
+        - containerPort: 30127
+          name: pasv30127
+          protocol: TCP
+        - containerPort: 30128
+          name: pasv30128
+          protocol: TCP
+        - containerPort: 30129
+          name: pasv30129
+          protocol: TCP
+        - containerPort: 30130
+          name: pasv30130
+          protocol: TCP
+        - containerPort: 30131
+          name: pasv30131
+          protocol: TCP
+        - containerPort: 30132
+          name: pasv30132
+          protocol: TCP
+        - containerPort: 30133
+          name: pasv30133
+          protocol: TCP
+        - containerPort: 30134
+          name: pasv30134
+          protocol: TCP
+        - containerPort: 30135
+          name: pasv30135
+          protocol: TCP
+        - containerPort: 30136
+          name: pasv30136
+          protocol: TCP
+        - containerPort: 30137
+          name: pasv30137
+          protocol: TCP
+        - containerPort: 30138
+          name: pasv30138
+          protocol: TCP
+        - containerPort: 30139
+          name: pasv30139
+          protocol: TCP
+        - containerPort: 30140
+          name: pasv30140
+          protocol: TCP
+        - containerPort: 30141
+          name: pasv30141
+          protocol: TCP
+        - containerPort: 30142
+          name: pasv30142
+          protocol: TCP
+        - containerPort: 30143
+          name: pasv30143
+          protocol: TCP
+        - containerPort: 30144
+          name: pasv30144
+          protocol: TCP
+        - containerPort: 30145
+          name: pasv30145
+          protocol: TCP
+        - containerPort: 30146
+          name: pasv30146
+          protocol: TCP
+        - containerPort: 30147
+          name: pasv30147
+          protocol: TCP
+        - containerPort: 30148
+          name: pasv30148
+          protocol: TCP
+        - containerPort: 30149
+          name: pasv30149
+          protocol: TCP
+        - containerPort: 30150
+          name: pasv30150
+          protocol: TCP
+        - containerPort: 30151
+          name: pasv30151
+          protocol: TCP
+        - containerPort: 30152
+          name: pasv30152
+          protocol: TCP
+        - containerPort: 30153
+          name: pasv30153
+          protocol: TCP
+        - containerPort: 30154
+          name: pasv30154
+          protocol: TCP
+        - containerPort: 30155
+          name: pasv30155
+          protocol: TCP
+        - containerPort: 30156
+          name: pasv30156
+          protocol: TCP
+        - containerPort: 30157
+          name: pasv30157
+          protocol: TCP
+        - containerPort: 30158
+          name: pasv30158
+          protocol: TCP
+        - containerPort: 30159
+          name: pasv30159
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 2
+          successThreshold: 2
+          tcpSocket:
+            port: 21
+          timeoutSeconds: 2
+        resources:
+          limits:
+            cpu: "10"
+            memory: 10Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+        volumeMounts:
+        - mountPath: /home/vsftpd/
+          name: ftp-data
+        - mountPath: /home/vsftpd/ipc_user
+          name: ftp-data
+          subPath: aoi-wzs-p1-swpc/smtdata/WZSIPC/retrain_data
+        - mountPath: /usr/sbin/run-vsftpd.sh
+          name: ftp-config-run-vsftpd-sh
+          subPath: run-vsftpd.sh
+      dnsConfig: {}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: ftp-data
+        persistentVolumeClaim:
+          claimName: dgx2-ftp-vol1
+      - configMap:
+          defaultMode: 509
+          items:
+          - key: run-vsftpd.sh
+            path: run-vsftpd.sh
+          name: dgx2-aoi-ftp-prd-config
+          optional: false
+        name: ftp-config-run-vsftpd-sh

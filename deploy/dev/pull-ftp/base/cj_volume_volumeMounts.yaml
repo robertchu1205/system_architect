@@ -1,0 +1,24 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: pull-data-to-metadata
+spec:
+  jobTemplate: 
+    spec:
+      template:
+        spec:
+          containers:
+          - name: pull-ftp
+            volumeMounts:
+            - name: data-volume
+              subPath: aoi-wzs-p3-dip-prewave-saiap
+              mountPath: /data/aoi-wzs-p3-dip-prewave-saiap
+          - name: to-metadata
+            volumeMounts:
+            - name: data-volume
+              subPath: aoi-wzs-p3-dip-prewave-saiap
+              mountPath: /data/aoi-wzs-p3-dip-prewave-saiap
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim: 
+              claimName: dataset-local

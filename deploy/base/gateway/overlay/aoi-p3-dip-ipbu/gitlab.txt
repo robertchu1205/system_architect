@@ -1,0 +1,2 @@
+CPdeployToken=skVwxMTxsFZa7_DeHWfv
+username=ipbu-gateway

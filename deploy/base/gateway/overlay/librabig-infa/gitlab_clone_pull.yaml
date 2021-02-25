@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: clone-models
+        image: harbor.wzs.wistron.com.cn/datteam/alpine/git-lfs
+        command:
+        - sh
+        - -c
+        - git config --global http.sslVerify false && git clone https://$username:$token@10.41.241.138/aoi-wzs-p3-dip-prewave-saiap/checkpoint.git /checkpoint
+        env:
+        - name: username
+          valueFrom:
+            secretKeyRef:
+              name: cp-gitlab-access-token
+              key: username
+        - name: token
+          valueFrom:
+            secretKeyRef:
+              name: cp-gitlab-access-token
+              key: CPdeployToken
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+        volumeMounts:
+        - name: checkpoint
+          mountPath: /checkpoint
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: pull-models
+        image: harbor.wzs.wistron.com.cn/datteam/alpine/git-lfs
+        workingDir: /checkpoint
+        command:
+        - sh
+        - -c
+        - git config --global http.sslVerify false && while true; do git pull; sleep 60; done
+        volumeMounts:
+        - name: checkpoint
+          mountPath: /checkpoint

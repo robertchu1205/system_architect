@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gitlab-runner
+  labels:
+    app: gitlab-runner
+    project: aoi-wzs-p3-dip-prewave-saiap
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gitlab-runner
+  labels:
+    app: gitlab-runner
+    project: aoi-wzs-p3-dip-prewave-saiap
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/exec", "secrets"]
+  verbs: ["get", "list", "watch", "create", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitlab-runner
+  labels:
+    app: gitlab-runner
+    project: aoi-wzs-p3-dip-prewave-saiap
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitlab-runner
+subjects:
+- kind: ServiceAccount
+  name: gitlab-runner
+  namespace: default

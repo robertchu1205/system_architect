@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: cadvisor
+  labels:
+    prometheus: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      app: cadvisor
+  podMetricsEndpoints:
+  - targetPort: 8080

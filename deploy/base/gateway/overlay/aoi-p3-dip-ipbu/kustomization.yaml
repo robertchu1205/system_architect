@@ -1,0 +1,35 @@
+bases:
+- ../../base
+namePrefix: ipbu-
+commonLabels:
+  project: aoi-p3-dip-ipbu
+secretGenerator:
+- name: cp-gitlab-access-token
+  envs:
+  - gitlab.txt
+  type: Opaque
+images:
+- name: harbor.wzs.wistron.com.cn/datteam/aoi-wzs-p3-dip-prewave-saiap/gateway:latest
+  newName: harbor.wzs.wistron.com.cn/datteam/aoi-wzs-p3-dip-prewave-saiap/gateway
+  newTag: "94063674"
+patchesStrategicMerge:
+- externalIPs.yaml
+- gitlab_clone_pull.yaml
+- deployment_volume_volumeMounts.yaml
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: "300m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 300Mi
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: "100m"
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: 100Mi
+  target:
+    kind: Deployment
+    name: gateway

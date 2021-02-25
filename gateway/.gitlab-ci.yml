@@ -1,0 +1,58 @@
+variables:
+  HARBOR_REGISTRY: "harbor.wzs.wistron.com.cn"
+  IMAGE_NAME: "datteam/aoi-wzs-p3-dip-prewave-saiap/gateway"
+  GIT_SSL_NO_VERIFY: "true"
+
+stages:
+- build
+
+# build-debug-image:
+#   stage: test:build
+#   image:
+#     name: harbor.wzs.wistron.com.cn/kaniko-project/executor:debug
+#     entrypoint: [""]
+#   retry: 2
+#   script:
+#   - echo "starting build debug image"
+#   - echo $HARBOR_LOGIN > /kaniko/.docker/config.json
+#   - |
+#     /kaniko/executor \
+#     --dockerfile=${CI_PROJECT_DIR}/Dockerfile.debug \
+#     --context=${CI_PROJECT_DIR} \
+#     --destination=${HARBOR_REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_REF_NAME}-debug \
+#     --insecure \
+#     --insecure-pull
+
+# unittest:
+#   stage: test
+#   image:
+#     name: ${HARBOR_REGISTRY}/${IMAGE_NAME}:${CI_COMMIT_REF_NAME}-debug
+#     entrypoint: [""]
+#   script:
+#   - echo "Start Testing"
+#   - python /usr/src/app/gw_test.py
+
+build-image:
+  stage: build
+  image:
+    name: harbor.wzs.wistron.com.cn/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+  - echo $HARBOR_LOGIN > /kaniko/.docker/config.json
+  # - echo "{\"auths\":{\"$HARBOR_REGISTRY\":{\"username\":\"$HARBOR_REGISTRY_USER\",\"password\":\"$HARBOR_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+  script:
+  # - TAG=$(date -u +"flask-V%Y-%m-%d-%H-%M-%S")
+  - TAG=${CI_COMMIT_SHORT_SHA}
+  - echo TAG:$TAG
+  - echo "starting building latest image"
+  - |
+    /kaniko/executor \
+    --dockerfile=${CI_PROJECT_DIR}/blueprints/Dockerfile \
+    --context=${CI_PROJECT_DIR}/blueprints \
+    --destination=${HARBOR_REGISTRY}/${IMAGE_NAME}:${TAG} \
+    --destination=${HARBOR_REGISTRY}/${IMAGE_NAME}:latest \
+    --insecure \
+    --insecure-pull
+  only:
+    refs:
+      - /^Gateway-.*$/

@@ -1,0 +1,10 @@
+# apiVersion: kustomize.config.k8s.io/v1beta1
+# kind: Kustomization
+resources:
+- Gateway.yaml
+commonLabels:
+  app: gateway
+images:
+- name: gateway
+  newName: harbor.wzs.wistron.com.cn/datteam/aoi-wzs-p3-dip-prewave-saiap/gateway
+  newTag: "latest"

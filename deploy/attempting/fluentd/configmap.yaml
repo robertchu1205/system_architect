@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-logging
+  namespace: logging
+  labels:
+    app: fluentd-logging
+data: 
+  fluent.conf: |
+    <source>
+      @type tail
+      path /var/log/*.log
+      pos_file /var/log/fluentd/tmp/access.log.pos
+      tag foo.*
+      format json
+      read_from_head true
+      <parse>
+        @type json
+      </parse>
+    </source>
+    <filter kubernetes.**>
+      @type kubernetes_metadata
+    </filter>
+    <source>
+      @type tail
+      @id gw_logs
+      path /var/log/containers/p3-saiap-gateway*.log
+      pos_file /var/log/fluentd-containers.log.pos
+      tag log.*
+      format json
+      read_from_head true
+      <parse>
+        @type json
+        time_format %Y-%m-%dT%H:%M:%S.%NZ
+      </parse>
+    </source>
+    <match log.**>
+      @type loki
+      url "http://loki:3100/api/prom/push"
+      flush_interval 10s
+      flush_at_shutdown true
+      buffer_chunk_limit 1m
+    </match>
+    <match **>
+      @type loki
+      url "https://logs-us-west1.grafana.net"
+      username "#{ENV['LOKI_USERNAME']}"
+      password "#{ENV['LOKI_PASSWORD']}"
+      extra_labels {"env":"dev"}
+      flush_interval 10s
+      flush_at_shutdown true
+      buffer_chunk_limit 1m
+    </match>
+    <match fluentd.**>
+      @type null
+    </match>
+    <match kubernetes.var.log.containers.**fluentd**.log>
+      @type null
+    </match>
+    <filter kubernetes.**>
+      @type kubernetes_metadata
+      @id filter_kube_metadata
+    </filter>
+    <match kubernetes.var.log.containers.**>
+      @type stdout
+    </match>

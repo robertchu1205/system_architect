@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: logging
+  name: fluentd
+spec:
+  type: NodePort
+  selector:
+    app: promtail-app
+  ports:
+  - name: promtail
+    port: 9080
+    targetPort: promtail
+    nodePort: 30908
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  namespace: logging
+  name: promtail
+spec:
+  selector: 
+    matchLabels:
+      app: promtail-app
+  template:
+    metadata: 
+      labels: 
+        app: promtail-app
+    spec:
+      serviceAccountName: promtail
+      containers:
+      - name: promtail
+        image: grafana/promtail:v0.3.0
+        args:
+        - -config.file=/etc/promtail/config.yaml
+        ports:
+        - name: promtail
+          containerPort: 9080
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: promtail-config
+          mountPath: /etc/promtail
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: promtail-config
+        configMap:
+          name: promtail-config

@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- mariadb.yaml
+images:
+- name: mariadb
+  newName: harbor.wzs.wistron.com.cn/datteam/mariadb
+  newTag: 10.5.5
+secretGenerator:
+- name: image-dataset-rootpassword
+  literals:
+  - MYSQL_ROOT_PASSWORD=robertchu
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/ports/0/nodePort
+      value: 30003
+  target:
+    kind: Service
+    name: image-dataset-mariadb  

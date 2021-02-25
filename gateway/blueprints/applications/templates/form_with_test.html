@@ -1,0 +1,52 @@
+<style>
+	table {
+		font-family: arial, sans-serif;
+		width: 50%;
+		padding: 5px;
+		border: 1px solid #dddddd;
+	}
+	td, th {
+  		text-align: left;
+	}
+	h2, h4 {
+		font-family: arial, sans-serif;
+	} 
+</style>
+<header>
+    <h2>個別模型信心值設定</h2>
+</header>
+<form action="{{ url_for('config_bp.set_config') }}" method="POST">
+	<h4>Model Setting:</h4>
+	{% for ms in modelsetting %}
+		<table>
+			<tr>
+				<th style="padding: 2px"> {{ ms }} </th>
+			</tr>
+			<tr>
+				{% for mn in modelsetting[ms]['model_name'] %}
+					<td>
+						<label for={{mn}}> {{ mn }} </label>
+						<input type="number" step="any" min="0" max="2" id={{mn}} name="ms_{{ ms }}_{{ mn }}" value="{{ modelsetting[ms]['con_threshold'][loop.index0] }}">
+					</td>
+				{% endfor %}
+			</tr>
+		</table>
+	{% endfor %}
+	<h4>Test Model Setting:</h4>
+	{% for tms in testmodelsetting['model_setting'] %}
+		<table>
+			<tr>
+				<th style="padding: 2px"> {{ tms }} </th>
+			</tr>
+			<tr>
+				{% for tmn in testmodelsetting['model_setting'][tms]['model_name'] %}
+					<td>
+						<label for={{tmn}}> {{ tmn }} </label>
+						<input type="number" step="any" min="0" max="2" id={{tmn}} name="tms_{{ tms }}_{{ tmn }}" value="{{ testmodelsetting['model_setting'][tms]['con_threshold'][loop.index0] }}">
+					</td>
+				{% endfor %}
+			</tr>
+		</table>
+	{% endfor %}
+	<input type="submit" style="margin: 5px" value="Submit">
+</form>

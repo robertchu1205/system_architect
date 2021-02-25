@@ -1,0 +1,108 @@
+server:
+  http_listen_port: 31001
+clients:
+# - url: http://$(LOKI_SERVICE):3100/api/prom/push
+- url: http://loki:3100/api/prom/push
+  external_labels: 
+    logsource: promtail
+client:
+  backoff_config:
+    maxbackoff: 5s
+    maxretries: 20
+    minbackoff: 100ms
+  batchsize: 102400
+  batchwait: 1s
+  external_labels:
+    producer: promtail
+  timeout: 10s
+positions:
+  filename: /var/log/positions.yaml
+target_config:
+  sync_period: 10s
+scrape_configs:
+- job_name: log
+  entry_parser: docker
+  static_configs:
+  - targets:
+    - localhost
+    labels:
+      __path__: /var/log/containers/*gateway*.log
+  pipeline_stages:
+  - docker: {}
+  - json:
+      expressions:
+        component:
+        PanelNo:
+        location:
+        eagle:
+        SN:
+        capacity:
+        degree:
+        voltage:
+        index:
+        req_time:
+        date:
+        res_time:
+        filename:
+        msg:
+        pred_class:
+        confidence:
+        ng_model_name:
+        own_pred_class:
+        own_confidence:
+        severity:
+        logger:
+        req_secs_taken:
+        project:
+        # type:
+        # request:
+        # protocol:
+        # method:
+        # remote_ip:
+        # request_size_b:
+        # remote_host:
+        # remote_port:
+        # response_time_ms:
+        # request_received_at:
+        # response_status:
+        # response_size_b:
+        # response_content_type:
+        # response_sent_at: 
+  - labels:
+      component:
+      PanelNo:
+      location:
+      eagle:
+      SN:
+      capacity:
+      degree:
+      voltage:
+      index:
+      req_time:
+      date:
+      res_time:
+      filename:
+      msg:
+      pred_class:
+      confidence:
+      ng_model_name:
+      own_pred_class:
+      own_confidence:
+      severity:
+      logger:
+      req_secs_taken:
+      project:
+      # type:
+      # request:
+      # protocol:
+      # method:
+      # remote_ip:
+      # request_size_b:
+      # remote_host:
+      # remote_port:
+      # response_time_ms:
+      # request_received_at:
+      # response_status:
+      # response_size_b:
+      # response_content_type:
+      # response_sent_at: 

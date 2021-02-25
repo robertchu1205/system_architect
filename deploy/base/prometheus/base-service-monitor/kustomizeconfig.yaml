@@ -1,0 +1,10 @@
+commonLabels:
+- path: spec/podMetadata/labels
+  kind: Prometheus
+varReference:
+- path: spec
+  kind: Prometheus
+- path: spec/serviceMonitorSelector/matchLabels
+  kind: Prometheus
+- path: spec/podMonitorSelector/matchLabels
+  kind: Prometheus

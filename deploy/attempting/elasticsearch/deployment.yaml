@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  labels:
+    app: elasticsearch
+spec:
+  type: NodePort
+  externalIPs: 
+  - 172.30.52.10
+  selector:
+    app: elasticsearch
+  ports:
+  - name: elasticsearch
+    port: 9300
+    targetPort: 9300
+    nodePort: 30093
+  - name: json
+    port: 9200
+    targetPort: 9200
+    nodePort: 30092
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  labels:
+    app: elasticsearch
+spec:
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: harbor.wzs.wistron.com.cn/elasticsearch/elasticsearch:7.3.1
+        env:
+        - name: discovery.type
+          value: "single-node"
+        # - name: ES_JAVA_OPTS
+        #   value: "-Xmx1024m -Xms1024m"
+        # - name: LimitNOFILE
+        #   value: "65536"
+        # - name: LimitMEMLOCK
+        #   value: "infinity"
+        # - name: TimeoutStopSec
+        #   value: "0"
+        volumeMounts: 
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 200m
+            memory: 200Mi
+        ports:
+        - containerPort: 9300
+        - containerPort: 9200
+      volumes: 
+      # Back up data from container in local server
+      - name: elasticsearch-data
+        persistentVolumeClaim:
+          claimName: log-pvc

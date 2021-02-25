@@ -1,0 +1,107 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: metrics-server-exporter
+  labels:
+    prometheus: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      app: metrics-server-exporter
+  podMetricsEndpoints:
+  - targetPort: 8000
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: metrics-server-exporter
+  namespace: kube-system
+  labels:
+    app: metrics-server-exporter
+spec:
+  selector:
+    matchLabels:
+      app: metrics-server-exporter
+  template:
+    metadata:
+      labels:
+        app: metrics-server-exporter
+    spec:
+      serviceAccountName: metrics-server-exporter
+      containers:
+      - name: metrics-server-exporter
+        image: vivareal/metrics-server-exporter:v0.0.7
+        # env:
+        # - name: K8S_ENDPOINT
+        #   value: ${K8S_ENDPOINT}
+        # - name: K8S_TOKEN
+        #   value: ${K8S_TOKEN}
+        # args:
+        # - --insecure-tls
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /metrics
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 30
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /metrics
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources:
+            requests:
+              memory: 150Mi
+              cpu: 100m
+            limits:
+              memory: 150Mi
+              cpu: 100m
+      restartPolicy: Always
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: metrics-server-exporter
+  labels:
+    app: metrics-server-exporter
+rules:
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server-exporter
+  namespace: kube-system
+  labels:
+    app: metrics-server-exporter
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server-exporter
+subjects:
+- kind: ServiceAccount
+  namespace: kube-system
+  name: metrics-server-exporter
+roleRef:
+  kind: ClusterRole
+  name: metrics-server-exporter
+  apiGroup: rbac.authorization.k8s.io

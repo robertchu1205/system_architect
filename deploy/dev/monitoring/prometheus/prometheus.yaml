@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+spec:
+  retention: 15d
+  podMetadata:
+    labels:
+      role: monitoring
+  image: harbor.wzs.wistron.com.cn/prometheus/prometheus:v2.10.0
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      prometheus: prometheus
+  podMonitorSelector:
+    matchLabels:
+      prometheus: prometheus
+  enableAdminAPI: false
+  retentionSize: 2GB
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi

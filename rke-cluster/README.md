@@ -1,0 +1,1 @@
+# installing kubernetes thru rke

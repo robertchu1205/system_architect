@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: node-exporter
+  labels:
+    prometheus: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      app: node-exporter
+  podMetricsEndpoints:
+  - targetPort: 9100
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: dcgm-exporter
+  labels:
+    prometheus: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      app: dcgm-exporter
+  podMetricsEndpoints:
+  - targetPort: 9400

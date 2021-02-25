@@ -1,0 +1,25 @@
+resources:
+- ./base/prometheus
+- ./base/grafana
+- ./base/loki
+- ./base/promtail
+commonLabels:
+  project: $projectcode
+  function: monitoring
+patchesStrategicMerge:
+- |-
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: grafana
+  spec:
+    externalIPs: 
+    - $aiserverip
+- |-
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: prometheus
+  spec:
+    externalIPs: 
+    - $aiserverip

@@ -1,0 +1,21 @@
+# apiVersion: kustomize.config.k8s.io/v1beta1
+# kind: Kustomization
+resources:
+- deployment.yaml
+- config.yaml
+- rbac.yaml
+commonLabels:
+  app: gitlab-runner
+  project: aoi
+namePrefix: robert-
+images:
+- name: gitlab-runner
+  newName: harbor.wzs.wistron.com.cn/datteam/gitlab/gitlab-runner
+  newTag: alpine-v12.2.0
+secretGenerator:
+- name: gitlab-runner-registration-token
+  files:
+  - ./runner-registration-token
+- name: gitlab-runner-ca
+  files: 
+  - ./gitlab-k8s.wzs.wistron.com.cn.crt

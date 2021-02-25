@@ -1,0 +1,67 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: golang-metrics-from-ftp-test
+  labels: 
+    app: golang
+    maintainer: robert
+spec:
+  ttlSecondsAfterFinished: 120
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: golang
+        maintainer: robert
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: golong
+        image: harbor.wzs.wistron.com.cn/datteam/golang:1.13
+        workingDir: /daily-metrics
+        env:
+        - name: GOOS
+          value: "linux"
+        - name: GOARCH
+          value: 'amd64'
+        - name: CGO_ENABLED
+          value: '0'
+        - name: GOPATH
+          value: ""
+        - name: GOPROXY
+          value: "https://goproxy.cn,direct"
+        - name: FTPHOST
+          value: "10.41.241.5:30121"
+        - name: USER
+          value: "aoi-wzs-p3-dip-prewave-saiap"
+        - name: PASSWORD
+          value: "P3ftp@2020"
+        - name: CRONDAYS
+          value: "7"
+        - name: FILESERVERURL
+          value: "10.41.16.21:30038"
+        - name: IMGEXTENSION
+          value: "png"
+        - name: ENVLINE
+          value: "D54"
+        - name: BASEPATH
+          value: "IPBU"
+        volumeMounts:
+        - name: data-volume
+          subPath: aoi-wzs-p3-dip-prewave-saiap/daily-metrics
+          mountPath: /daily-metrics
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50M
+          limits: # Maximum
+            cpu: 500m
+            memory: 500M
+        command: 
+        - sh
+        - run-go.sh
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: 
+            claimName: dataset-local

@@ -1,0 +1,27 @@
+resources:
+- prometheus.yaml
+- rbac.yaml
+- servicemonitor.yaml
+- podmonitor.yaml
+commonLabels:
+  app: prometheus
+  role: logging
+images:
+- name: prometheus
+  newName: harbor.wzs.wistron.com.cn/prometheus/prometheus
+  newTag: v2.13.0
+vars:
+- name: PROMETHEUS_SERVICE_ACCOUNT
+  objref:
+    kind: ServiceAccount
+    name: prometheus
+    apiVersion: v1
+- name: PROMETHEUS_NAME
+  objref:
+    kind: Prometheus
+    name: prometheus
+    apiVersion: monitoring.coreos.com/v1
+configurations:
+- kustomizeconfig.yaml
+patchesStrategicMerge:
+  - externalIPs.yaml

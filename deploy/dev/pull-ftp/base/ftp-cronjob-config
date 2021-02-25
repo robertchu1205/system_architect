@@ -1,0 +1,7 @@
+IMAGE_FOLDER_PATH=$IMAGE_FOLDER_PATH
+DB_PATH=$DB_PATH
+database_table=$database_table
+FTP=$FTP
+SOURCE_DIR=$SOURCE_DIR
+HOW_MANY_DAYS_AGO=$HOW_MANY_DAYS_AGO
+file_server_url=$file_server_url

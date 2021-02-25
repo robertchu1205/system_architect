@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dcgm-exporter
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: dcgm-exporter
+  template:
+    metadata:
+      labels:
+        app: dcgm-exporter
+      name: dcgm-exporter
+    spec:
+      nodeSelector:
+        hardware-type: NVIDIAGPU
+      containers:
+      - image: harbor.wzs.wistron.com.cn/nvidia/dcgm-exporter:1.7.2
+        name: dcgm-exporter
+        env:
+        - name: "DCGM_EXPORTER_LISTEN"
+          value: ":9400"
+        - name: "DCGM_EXPORTER_KUBERNETES"
+          value: "true"
+        ports:
+        - name: metrics
+          containerPort: 9400
+        resources:
+          requests:
+            memory: 30Mi
+            cpu: 100m
+          limits:
+            memory: 50Mi
+            cpu: 200m
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+        volumeMounts:
+        - name: collector-textfiles
+          mountPath: /run/prometheus
+      volumes:
+      - name: collector-textfiles
+        emptyDir:
+          medium: Memory

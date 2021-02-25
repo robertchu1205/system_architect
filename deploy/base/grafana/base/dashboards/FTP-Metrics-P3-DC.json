@@ -1,0 +1,625 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "project: aoi-wzs-p3-dip-prewave-saiap",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 2,
+  "iteration": 1595405255438,
+  "links": [],
+  "panels": [
+    {
+      "content": "\n* **time range at right top of this dashboard represents the inclusion of metrics refreshed ( better to be `last 1 hour`, which is the latest refresh )**",
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "mode": "markdown",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": "Prometheus",
+      "description": "sum(metrics_true_ng) + sum(metrics_true_ok)",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [
+            {
+              "id": 0,
+              "op": "=",
+              "text": "N/A",
+              "type": 1,
+              "value": "null"
+            }
+          ],
+          "noValue": "0",
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 4,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "expr": "sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
+          "hide": true,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "expr": "((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "All Image Quantity",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "metrics_false_ng",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "expr": "sum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Overkill Image Quantity",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "sum(metrics_false_ng) / (sum(metrics_true_ng)+sum(metrics_true_ok))",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.01
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 5,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "expr": "sum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) / ( sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) )",
+          "hide": true,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "(sum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) / ((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Overkill Rate (%)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "metrics_false_ok",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "expr": "sum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Leak Image Quantity",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "sum(metrics_false_ok) / (sum(metrics_true_ok)+sum(metrics_true_ng))",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.0003
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "id": 3,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "expr": "sum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) / ( sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) )",
+          "hide": true,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "A"
+        },
+        {
+          "expr": "(sum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) / ((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Leak Rate (%)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "metrics_inversepolarity_leak",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "expr": "sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Inverse Polarity Leak Image Quantity",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "sum(metrics_inversepolarity_leak) / (sum(metrics_true_ok)+sum(metrics_true_ng))",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 2,
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1e-8
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 8,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "expr": "sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) / ( sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) )",
+          "hide": true,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "A"
+        },
+        {
+          "expr": "(sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) / ((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "interval": "",
+          "intervalFactor": 10,
+          "legendFormat": "",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Inverse Polarity Leak Rate (%)",
+      "type": "gauge"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 25,
+  "style": "dark",
+  "tags": [
+    "aoi-wzs-p3-dip-prewave-saiap",
+    "daily-metrics",
+    "Overkill",
+    "Leak"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(metrics_true_ok{job=\"ftp-metrics\"},line)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "產線",
+        "multi": true,
+        "name": "line",
+        "options": [],
+        "query": "label_values(metrics_true_ok{job=\"ftp-metrics\"},line)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(metrics_true_ok{job=\"ftp-metrics\"},date)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "日期",
+        "multi": true,
+        "name": "date",
+        "options": [],
+        "query": "label_values(metrics_true_ok{job=\"ftp-metrics\"},date)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 2,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "label_values(filename_of_overkill{job=\"ftp-metrics\"},comp)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "元件",
+        "multi": true,
+        "name": "component",
+        "options": [],
+        "query": "label_values(filename_of_overkill{job=\"ftp-metrics\"},comp)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "FTP Daily Metrics",
+  "uid": "MH_aU8gMk",
+  "version": 1
+}

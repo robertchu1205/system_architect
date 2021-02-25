@@ -1,0 +1,20 @@
+// http response json format
+{
+    "predictions": [
+        // response 1
+        {
+            "pred_class": "OK",  // need to be string
+            "confidence": 0.9183
+        },
+        // response 2
+        {
+            "pred_class": "NG",
+            "confidence": 0.8084
+        },
+        // response 3
+        {
+            "pred_class": "OK",
+            "confidence": 0.5617
+        }
+    ]
+}

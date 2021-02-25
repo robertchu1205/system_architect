@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aoi-wzs-p3-dip-prewave-saiap-daily-metrics
+  labels:
+    project: aoi-wzs-p3-dip-prewave-saiap
+    app: daily-metrics
+spec:
+  type: NodePort
+  selector:
+    project: aoi-wzs-p3-dip-prewave-saiap
+    app: daily-metrics
+  ports:
+  - name: metrics
+    port: 3333
+    targetPort: metrics
+    nodePort: 30541

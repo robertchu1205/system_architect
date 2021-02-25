@@ -1,0 +1,161 @@
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     operated-prometheus: "true"
+#   name: prometheus-operated
+# spec:
+#   ports:
+#   - name: web
+#     nodePort: 30090
+#     port: 9090
+#     targetPort: web
+#   selector:
+#     app: prometheus
+#   type: NodePort
+# ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: prometheus
+    prometheus: prometheus
+  name: prometheus-prometheus
+  ownerReferences:
+  - apiVersion: monitoring.coreos.com/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Prometheus
+    name: prometheus
+    uid: 8698d5fb-c822-4ad4-98be-d5a4693273e1
+spec:
+  podManagementPolicy: Parallel
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: prometheus
+      prometheus: prometheus
+  serviceName: prometheus-operated
+  template:
+    metadata:
+      labels:
+        app: prometheus
+        prometheus: prometheus
+    spec:
+      containers:
+      - args:
+        - --web.console.templates=/etc/prometheus/consoles
+        - --web.console.libraries=/etc/prometheus/console_libraries
+        - --storage.tsdb.retention.size=1GB
+        - --config.file=/etc/prometheus/config_out/prometheus.env.yaml
+        - --storage.tsdb.path=/prometheus
+        - --storage.tsdb.retention.time=21d
+        - --web.enable-lifecycle
+        - --storage.tsdb.no-lockfile
+        - --web.route-prefix=/
+        image: harbor.wzs.wistron.com.cn/prometheus/prometheus:v2.10.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /-/healthy
+            port: web
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        name: prometheus
+        ports:
+        - containerPort: 9090
+          name: web
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 120
+          httpGet:
+            path: /-/ready
+            port: web
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: 800m
+            memory: 750Mi
+        volumeMounts:
+        - mountPath: /etc/prometheus/config_out
+          name: config-out
+          readOnly: true
+        - mountPath: /prometheus
+          name: prometheus-prometheus-db
+          # subPath: prometheus-db
+        - mountPath: /etc/prometheus/rules/prometheus-prometheus-rulefiles-0
+          name: prometheus-prometheus-rulefiles-0
+      - args:
+        - --log-format=logfmt
+        - --reload-url=http://localhost:9090/-/reload
+        - --config-file=/etc/prometheus/config/prometheus.yaml.gz
+        - --config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml
+        command:
+        - /bin/prometheus-config-reloader
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        image: harbor.wzs.wistron.com.cn/coreos/prometheus-config-reloader:v0.33.0
+        imagePullPolicy: IfNotPresent
+        name: prometheus-config-reloader
+        resources:
+          limits:
+            cpu: 500m
+            memory: 250Mi
+        volumeMounts:
+        - mountPath: /etc/prometheus/config
+          name: config
+        - mountPath: /etc/prometheus/config_out
+          name: config-out
+      - args:
+        - --webhook-url=http://localhost:9090/-/reload
+        - --volume-dir=/etc/prometheus/rules/prometheus-prometheus-rulefiles-0
+        image: harbor.wzs.wistron.com.cn/coreos/configmap-reload:v0.0.1
+        imagePullPolicy: IfNotPresent
+        name: rules-configmap-reloader
+        resources:
+          limits:
+            cpu: 500m
+            memory: 250Mi
+        volumeMounts:
+        - mountPath: /etc/prometheus/rules/prometheus-prometheus-rulefiles-0
+          name: prometheus-prometheus-rulefiles-0
+      securityContext:
+        fsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
+      serviceAccount: prometheus
+      serviceAccountName: prometheus
+      volumes:
+      - name: config
+        secret:
+          defaultMode: 420
+          secretName: prometheus-prometheus
+      - emptyDir: {}
+        name: config-out
+      - configMap:
+          defaultMode: 420
+          name: prometheus-prometheus-rulefiles-0
+        name: prometheus-prometheus-rulefiles-0
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: prometheus-prometheus-db
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+      volumeMode: Filesystem

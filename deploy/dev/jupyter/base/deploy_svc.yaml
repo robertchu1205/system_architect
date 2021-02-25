@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tensorflow2-jupyter
+spec:
+  type: NodePort
+  ports:
+  - name: nb
+    port: 8888
+    targetPort: nb
+    # nodePort: 30009
+  - name: tb
+    port: 6006
+    targetPort: tb
+    # nodePort: 30010
+  # - name: hub
+  #   port: 8000
+  #   targetPort: hub
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tensorflow2-jupyter
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+      - name: tensorflow2-jupyter
+        image: nvidia-jupyter
+        imagePullPolicy: IfNotPresent   
+        env:
+        - name: PYTHONDONTWRITEBYTECODE
+          value: "1"
+        - name: JUPYTER_ENABLE_LAB
+          value: "yes"
+        - name: TF_FORCE_GPU_ALLOW_GROWTH
+          value: "true"
+        command:
+        - /bin/sh
+        - -c 
+        - apt-get update && apt-get install -y --no-install-recommends ffmpeg libsm6 libxext6 libxrender-dev && pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /root/.keras/models/requirement.txt && jupyter-lab
+        args:
+        - --ip=0.0.0.0
+        - --allow-root
+        - --NotebookApp.token=""
+        - --NotebookApp.password_requiredBool=True
+        - --notebook-dir=/data
+        # - pip config --user set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && pip config --user set global.trusted-host pypi.tuna.tsinghua.edu.cn && 
+        # npm install -g configurable-http-proxy
+        # - c.ConfigurableHTTPProxy.command = '/usr/local/bin/configurable-http-proxy'
+        # - c.Authenticator.admin_users = 'robert'
+        workingDir: /data
+        ports:
+        - name: nb
+          containerPort: 8888
+        - name: tb
+          containerPort: 6006
+        # - name: hub
+        #   containerPort: 8000
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: data-volume
+          subPath: robert/pretrained_notop_model
+          mountPath: /root/.keras/models
+        resources:
+          requests:
+            cpu: 4
+            memory: 20Gi
+            nvidia.com/gpu: 1
+          limits: 
+            cpu: 10
+            memory: 100Gi
+            nvidia.com/gpu: 1
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: 
+            claimName: dataset-local

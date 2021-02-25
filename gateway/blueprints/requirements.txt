@@ -1,0 +1,13 @@
+requests
+prometheus_client
+flask
+jinja2
+gunicorn
+gevent
+Pillow
+numpy
+google
+protobuf
+grpcio
+grpcio-tools
+pyyaml

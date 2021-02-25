@@ -1,0 +1,83 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonLabels:
+  project: aoi-wzs-p3-dip-prewave-saiap
+resources:
+- ftp-metrics.yaml
+- file-server.yaml
+# namePrefix: ipbu-
+images:
+- name: ftp-metrics
+  newName: harbor.wzs.wistron.com.cn/datteam/aoi-wzs-p3-dip-prewave-saiap/daily-metrics
+  newTag: "f70a1210"
+- name: file-server
+  newName: harbor.wzs.wistron.com.cn/datteam/python
+  newTag: "3.7-alpine"
+- name: wget
+  newName: harbor.wzs.wistron.com.cn/datteam/wget
+  newTag: "latest"
+secretGenerator:
+- name: data-center-ftp
+  literals:
+  - FTPHOST=10.41.241.5:30121
+  - USER=aoi-wzs-p3-dip-prewave-saiap
+  - PASSWORD=P3ftp@2020
+  - FILESERVERURL=10.41.16.21:30038
+  - SOURCE_DIR=dip-prewave-saiap
+  - IMAGE_FOLDER_PATH=/data/
+  - ENVLINE=LOOP_LINES
+  - BASEPATH=dip-prewave-saiap
+  options:
+    disableNameSuffixHash: true
+    labels:
+      data: ftp
+configMapGenerator:
+- name: pull-ftp-to-metadata
+  files:
+  - pull-ftp.sh
+  options:
+    labels:
+      app: pull-ftp
+patchesStrategicMerge:
+- externalIPs.yaml
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/ports/0/nodePort
+      value: 30038
+  target:
+    kind: Service
+    name: file-service
+- patch: |-
+    - op: replace
+      path: /spec/schedule
+      value: 20 * * * *
+    - op: replace
+      path: /spec/jobTemplate/spec/template/spec/volumes/0/hostPath/path
+      value: /home/wzsdat/dip-prewave-saiap
+  target:
+    kind: CronJob
+    name: pull-ftp-from-data-center
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/volumes/0/hostPath/path
+      value: /home/wzsdat/dip-prewave-saiap
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: 300m
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 1Gi
+  target:
+    kind: Deployment
+    name: file-service
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: 200m
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 200M
+  target:
+    kind: Deployment
+    name: daily-metrics

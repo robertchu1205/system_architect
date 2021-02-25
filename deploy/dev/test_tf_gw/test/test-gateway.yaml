@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: gateway-test
+    labels:
+        app: gateway
+spec:
+    type: NodePort
+    externalTrafficPolicy: Local
+    selector:
+        app: gateway
+    ports:
+    -   name: gw
+        port: 3333
+        targetPort: gw
+        nodePort: 30030
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: gateway-test
+    labels:
+        app: gateway
+spec:
+    strategy:
+        type: RollingUpdate
+    replicas: 1
+    selector:
+        matchLabels:
+            app: gateway
+    template:
+        metadata:
+            labels:
+                app: gateway
+        spec:
+            containers:
+            -   name: gateway
+                image: dip-gateway:test
+                ports:
+                -   name: gw
+                    containerPort: 3333
+                volumeMounts:
+                -   name: data-volume
+                    subPath: aoi-wzs-p3-dip-prewave-saiap/checkpoint
+                    mountPath: /checkpoint
+                -   name: data-volume
+                    subPath: aoi-wzs-p3-dip-prewave-saiap/checkpoint/config
+                    mountPath: /config
+                resources:
+                    requests:
+                        cpu: 500m
+                        memory: 100Mi
+                    limits:
+                        cpu: 1.2
+                        memory: 800Mi
+            volumes:
+            -   name: data-volume
+                persistentVolumeClaim: 
+                    claimName: dataset-local

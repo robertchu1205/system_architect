@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: $containerprefix-process-api
+  labels:
+    prefix: $containerprefix
+    app: process-api
+    project: $projectcode
+spec:
+  selector:
+    prefix: $containerprefix
+    app: process-api
+    project: $projectcode
+  type: ClusterIP
+  ports:
+  - name: rest
+    port: 3000
+    targetPort: rest
+    # nodePort: $restnodeport
+  - name: grpc
+    port: 50051
+    targetPort: grpc
+    # nodePort: $grpcnodeport
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $containerprefix-process-api
+  labels:
+    prefix: $containerprefix
+    app: process-api
+    project: $projectcode
+spec:
+  strategy:
+    type: RollingUpdate
+  replicas: 1
+  selector:
+    matchLabels:
+      prefix: $containerprefix
+      app: process-api
+      project: $projectcode
+  template:
+    metadata:
+      labels:
+        prefix: $containerprefix
+        app: process-api
+        project: $projectcode
+    spec:
+      containers:
+      - name: process-api
+        image: $processimage
+        imagePullPolicy: Always
+        livenessProbe:
+          # periodSeconds: 60
+          httpGet:
+            path: /apidocs/
+            port: rest
+        readinessProbe:
+          # periodSeconds: 60
+          httpGet:
+            path: /apidocs/
+            port: rest
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: $limitscpu
+            memory: $limitsmemory
+        ports:
+        - name: grpc
+          containerPort: 50051
+        - name: rest
+          containerPort: 3000
+        volumeMounts:
+        - name: process-functions
+          mountPath: /flask-app/src/functions
+      volumes:
+      - name: process-functions
+        hostPath:
+          path: $processfunctions

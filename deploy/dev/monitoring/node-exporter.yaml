@@ -1,0 +1,309 @@
+# apiVersion: v1
+# kind: ServiceAccount
+# metadata:
+#   name: node-exporter
+#   namespace: kube-system
+# ---
+# kind: ClusterRoleBinding
+# apiVersion: rbac.authorization.k8s.io/v1
+# metadata:
+#   name: node-exporter
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: node-exporter
+# subjects:
+# - kind: ServiceAccount
+#   # apiGroup: rbac.authorization.k8s.io
+#   # name: system:authenticated
+#   name: node-exporter
+#   namespace: kube-system
+# ---
+# kind: ClusterRole
+# apiVersion: rbac.authorization.k8s.io/v1
+# metadata:
+#   name: node-exporter
+# rules:
+#   - apiGroups: ['policy']
+#     resources: ['podsecuritypolicies']
+#     verbs:     ['use']
+#     resourceNames:
+#     - node-exporter
+# ---
+# apiVersion: policy/v1beta1
+# kind: PodSecurityPolicy
+# metadata:
+#   name: node-exporter
+# spec:
+#   seLinux:
+#     rule: RunAsAny
+#   supplementalGroups:
+#     rule: RunAsAny
+#   runAsUser:
+#     rule: RunAsAny
+#   fsGroup:
+#     rule: RunAsAny
+#   volumes:
+#   - '*'
+#   allowPrivilegeEscalation: true
+#   allowedHostPaths:
+#   - pathPrefix: "/proc"
+#   - pathPrefix: "/sys"
+# ---
+# Custom node-exporter collecting GPU metrics from dcgm-exporter.
+# Refer: https://github.com/kubernetes/kubernetes/blob/master/cluster/addons/prometheus/node-exporter-ds.yml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+      name: node-exporter
+    spec:
+      # serviceAccountName: node-exporter
+      containers:
+      - image: harbor.wzs.wistron.com.cn/prometheus/node-exporter:v1.0.1
+        name: node-exporter
+        args:
+        - --web.listen-address=0.0.0.0:9100
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --collector.textfile.directory=/run/prometheus
+        ports:
+        - name: metrics
+          containerPort: 9100
+          hostPort: 9100
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 350m
+          limits:
+            memory: 200Mi
+            cpu: 700m
+        volumeMounts:
+        - mountPath: /host/proc
+          name: proc
+          readOnly: true
+        - mountPath: /host/sys
+          name: sys
+          readOnly: true
+        - mountPath: /run/prometheus
+          name: collector-textfiles
+          readOnly: true
+        # - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        #   name: default-token-chdcl
+        #   readOnly: true
+      # hostNetwork: true
+      # hostPID: true
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: collector-textfiles
+        emptyDir:
+          medium: Memory
+      # - name: default-token-chdcl
+      #   secret:
+      #     defaultMode: 420
+      #     secretName: default-token-chdcl
+# ---
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   annotations:
+#     kubernetes.io/psp: default-psp
+#   creationTimestamp: "2020-08-31T01:42:31Z"
+#   generateName: node-exporter-
+#   labels:
+#     app: node-exporter
+#     controller-revision-hash: 57c888967b
+#     pod-template-generation: "1"
+#   name: node-exporter-wbp29
+#   namespace: kube-system
+#   ownerReferences:
+#   - apiVersion: apps/v1
+#     blockOwnerDeletion: true
+#     controller: true
+#     kind: DaemonSet
+#     name: node-exporter
+#     uid: d53802c0-cc88-4a45-bc69-9764453a02d9
+#   resourceVersion: "54926121"
+#   selfLink: /api/v1/namespaces/kube-system/pods/node-exporter-wbp29
+#   uid: c9e63163-c280-4426-873f-fe4a36cb13cd
+# spec:
+#   affinity:
+#     nodeAffinity:
+#       requiredDuringSchedulingIgnoredDuringExecution:
+#         nodeSelectorTerms:
+#         - matchFields:
+#           - key: metadata.name
+#             operator: In
+#             values:
+#             - 10.41.241.230
+#   containers:
+#   - args:
+#     - --web.listen-address=0.0.0.0:9100
+#     - --path.procfs=/host/proc
+#     - --path.sysfs=/host/sys
+#     - --collector.textfile.directory=/run/prometheus
+#     image: harbor.wzs.wistron.com.cn/prometheus/node-exporter:v0.15.2
+#     imagePullPolicy: IfNotPresent
+#     name: node-exporter
+#     ports:
+#     - containerPort: 9100
+#       hostPort: 9100
+#       name: metrics
+#       protocol: TCP
+#     resources:
+#       limits:
+#         cpu: 200m
+#         memory: 50Mi
+#       requests:
+#         cpu: 100m
+#         memory: 30Mi
+#     terminationMessagePath: /dev/termination-log
+#     terminationMessagePolicy: File
+#     volumeMounts:
+#     - mountPath: /host/proc
+#       name: proc
+#       readOnly: true
+#     - mountPath: /host/sys
+#       name: sys
+#       readOnly: true
+#     - mountPath: /run/prometheus
+#       name: collector-textfiles
+#       readOnly: true
+#     - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+#       name: default-token-chdcl
+#       readOnly: true
+#   - image: harbor.wzs.wistron.com.cn/nvidia/dcgm-exporter:1.7.2
+#     imagePullPolicy: IfNotPresent
+#     name: nvidia-dcgm-exporter
+#     resources: {}
+#     securityContext:
+#       runAsNonRoot: false
+#       runAsUser: 0
+#     terminationMessagePath: /dev/termination-log
+#     terminationMessagePolicy: File
+#     volumeMounts:
+#     - mountPath: /run/prometheus
+#       name: collector-textfiles
+#     - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+#       name: default-token-chdcl
+#       readOnly: true
+#   dnsPolicy: ClusterFirst
+#   enableServiceLinks: true
+#   hostNetwork: true
+#   hostPID: true
+#   nodeName: 10.41.241.230
+#   nodeSelector:
+#     hardware-type: NVIDIAGPU
+#   priority: 0
+#   restartPolicy: Always
+#   schedulerName: default-scheduler
+#   securityContext: {}
+#   serviceAccount: default
+#   serviceAccountName: default
+#   terminationGracePeriodSeconds: 30
+#   tolerations:
+#   - effect: NoExecute
+#     key: node.kubernetes.io/not-ready
+#     operator: Exists
+#   - effect: NoExecute
+#     key: node.kubernetes.io/unreachable
+#     operator: Exists
+#   - effect: NoSchedule
+#     key: node.kubernetes.io/disk-pressure
+#     operator: Exists
+#   - effect: NoSchedule
+#     key: node.kubernetes.io/memory-pressure
+#     operator: Exists
+#   - effect: NoSchedule
+#     key: node.kubernetes.io/pid-pressure
+#     operator: Exists
+#   - effect: NoSchedule
+#     key: node.kubernetes.io/unschedulable
+#     operator: Exists
+#   - effect: NoSchedule
+#     key: node.kubernetes.io/network-unavailable
+#     operator: Exists
+#   volumes:
+#   - hostPath:
+#       path: /proc
+#       type: ""
+#     name: proc
+#   - hostPath:
+#       path: /sys
+#       type: ""
+#     name: sys
+#   - emptyDir:
+#       medium: Memory
+#     name: collector-textfiles
+#   - name: default-token-chdcl
+#     secret:
+#       defaultMode: 420
+#       secretName: default-token-chdcl
+# status:
+#   conditions:
+#   - lastProbeTime: null
+#     lastTransitionTime: "2020-08-31T01:42:31Z"
+#     status: "True"
+#     type: Initialized
+#   - lastProbeTime: null
+#     lastTransitionTime: "2020-08-31T01:42:37Z"
+#     status: "True"
+#     type: Ready
+#   - lastProbeTime: null
+#     lastTransitionTime: "2020-08-31T01:42:37Z"
+#     status: "True"
+#     type: ContainersReady
+#   - lastProbeTime: null
+#     lastTransitionTime: "2020-08-31T01:42:31Z"
+#     status: "True"
+#     type: PodScheduled
+#   containerStatuses:
+#   - containerID: docker://16ee43060b103d19aafbc870790ab1c50c2684ad2330cb44ed3fa6d4911390ab
+#     image: harbor.wzs.wistron.com.cn/prometheus/node-exporter:v0.15.2
+#     imageID: docker-pullable://harbor.wzs.wistron.com.cn/prometheus/node-exporter@sha256:86f3cafaa6c572d5e05ff7ff23ca7f022fed1f0f461b7daba8ef52da2faf4e37
+#     lastState: {}
+#     name: node-exporter
+#     ready: true
+#     restartCount: 0
+#     started: true
+#     state:
+#       running:
+#         startedAt: "2020-08-31T01:42:34Z"
+#   - containerID: docker://dc3b219236cabcfe107eec5a2a53103b821df7a172c85e09b961620dc843b4c8
+#     image: nvidia/dcgm-exporter:1.7.2
+#     imageID: docker-pullable://nvidia/dcgm-exporter@sha256:69403133a54b9600337cb052cc2aafd38192f3a644a79542e4fa92a487cd3ccf
+#     lastState:
+#       terminated:
+#         containerID: docker://599dc33ba8f9caaf7bfe5e6d027cb8292389f9feb0da54fcca7cd951cd4541d0
+#         exitCode: 0
+#         finishedAt: "2020-09-23T03:12:01Z"
+#         reason: Completed
+#         startedAt: "2020-08-31T01:42:36Z"
+#     name: nvidia-dcgm-exporter
+#     ready: true
+#     restartCount: 1
+#     started: true
+#     state:
+#       running:
+#         startedAt: "2020-09-23T03:12:07Z"
+#   hostIP: 10.41.241.230
+#   phase: Running
+#   podIP: 10.41.241.230
+#   podIPs:
+#   - ip: 10.41.241.230
+#   qosClass: Burstable
+#   startTime: "2020-08-31T01:42:31Z"
