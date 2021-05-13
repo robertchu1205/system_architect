@@ -1,0 +1,7 @@
+- [base](./base/)
+    - simple template for applying gateway
+- [overlay](./overlay/)
+    - continuously pulling from gitlab: 2 containers in a deployment (pulling and gateway)
+    - sftp mounted directory: let users alter gateway config by editing files in sftp
+    - both methods mentioed above were abandoned except p3 dip project with saiap
+    - cases by projects and methods

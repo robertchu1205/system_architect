@@ -104,20 +104,11 @@
       "pluginVersion": "7.0.0",
       "targets": [
         {
-          "expr": "sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
-          "hide": true,
-          "instant": false,
-          "interval": "",
-          "intervalFactor": 10,
-          "legendFormat": "",
-          "refId": "C"
-        },
-        {
-          "expr": "((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "expr": "clamp_min(\nsum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0)",
           "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
         }
@@ -170,11 +161,11 @@
       "pluginVersion": "7.0.0",
       "targets": [
         {
-          "expr": "sum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
+          "expr": "clamp_min(\nsum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0)",
           "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "B"
         }
@@ -233,18 +224,19 @@
       "pluginVersion": "7.0.0",
       "targets": [
         {
-          "expr": "sum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) / ( sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) )",
-          "hide": true,
+          "expr": "clamp_min(sum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) / ( clamp_min(sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) + clamp_min(sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) )",
+          "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "B"
         },
         {
           "expr": "(sum(metrics_false_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) / ((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "hide": true,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
         }
@@ -297,11 +289,11 @@
       "pluginVersion": "7.0.0",
       "targets": [
         {
-          "expr": "sum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
+          "expr": "clamp_min(\nsum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0)",
           "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
         }
@@ -360,18 +352,19 @@
       "pluginVersion": "7.0.0",
       "targets": [
         {
-          "expr": "sum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) / ( sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) )",
-          "hide": true,
+          "expr": "clamp_min(sum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) / ( clamp_min(sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) + clamp_min(sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) )",
+          "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
         },
         {
           "expr": "(sum(metrics_false_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) / ((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "hide": true,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "B"
         }
@@ -424,11 +417,11 @@
       "pluginVersion": "7.0.0",
       "targets": [
         {
-          "expr": "sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"})",
+          "expr": "clamp_min\n(sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0)",
           "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
         }
@@ -487,18 +480,19 @@
       "pluginVersion": "7.0.0",
       "targets": [
         {
-          "expr": "sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) / ( sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) + sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) )",
-          "hide": true,
+          "expr": "clamp_min(sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) / ( clamp_min(sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) + clamp_min(sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}), 0) )",
+          "hide": false,
           "instant": false,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
         },
         {
           "expr": "(sum(metrics_inversepolarity_leak{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) / ((sum(metrics_true_ng{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)) + (sum(metrics_true_ok{line=~\"$line\",date=~\"$date\",comp=~\"$component\",job=\"ftp-metrics\"}) OR on() vector(0)))",
+          "hide": true,
           "interval": "",
-          "intervalFactor": 10,
+          "intervalFactor": 1,
           "legendFormat": "",
           "refId": "B"
         }

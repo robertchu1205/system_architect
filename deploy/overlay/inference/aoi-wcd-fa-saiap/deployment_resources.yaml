@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tfserving
+spec:
+  template: 
+    spec:
+      containers: 
+      - name: tfserving
+        resources:
+          limits:
+            cpu: 5
+            memory: 3Gi

@@ -1,0 +1,8 @@
+- [daily metics](./ftp-metrics.yaml)
+    - metrics used in dashboard **"FTP Daily Metrics, Loki Overkill & Leak Details"**
+    - record and calculate overkill & leak rate from defined ftp
+    - It would also record overkill & leak paths in **label** of the metircs
+    - expose metrics thru prometheus
+- [file server](./file-server.yaml)
+    - 1. pull labeled images by the date from data center
+    - 2. to show overkill & leak images in the dashboard thru python.http.server

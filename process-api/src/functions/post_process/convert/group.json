@@ -1,0 +1,66 @@
+{
+  "NNs_R_0402":{
+    "high_priority_label": ["NG"],
+    "overwrite_weight": true,
+    "pre_function": ["region_of_interest"],
+    "post_function": ["integrate"],
+    "models":[
+      {
+        "name": "NNs_R_0402",
+        "weight": 1,
+        "order": 1,
+        "device": "GPU",
+        "post_function": ["convert"],
+        "Threshold":{
+          "0": 0.7,
+          "1": 0.7,
+          "2": 0.7,
+          "3": 0.7,
+          "4": 0.7,
+          "5": 0.7,
+          "6": 0.7,
+          "7": 0.7
+        },
+        "threshold_label": "NG"
+      },
+      {
+        "name": "NNs_R_MRG",
+        "weight": 1,
+        "order": 1,
+        "device": "GPU",
+        "post_function": ["convert"],
+        "Threshold":{
+          "0": 0.7,
+          "1": 0.7,
+          "2": 0.7,
+          "3": 0.7,
+          "4": 0.7,
+          "5": 0.7
+        },
+        "threshold_label": "NG"
+      }
+    ]
+  },
+  "NNs_R_MRG":{
+    "high_priority_label": ["NG"],
+    "overwrite_weight": true,
+    "pre_function": ["region_of_interest"],
+    "models":[
+      {
+        "name": "NNs_R_MRG",
+        "weight": 1,
+        "order": 1,
+        "device": "GPU",
+        "post_function": ["convert", "SSIM", "AntiPole"],
+        "Threshold":{
+          "0": 0.7,
+          "1": 0.7,
+          "2": 0.7,
+          "3": 0.7,
+          "4": 0.7
+        },
+        "threshold_label": "NG"
+      }
+    ]
+  }
+}

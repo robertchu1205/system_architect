@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oneai-process
+  labels:
+    app: oneai-process
+spec:
+  selector:
+    app: oneai-process
+  type: NodePort
+  ports:
+  - name: rest
+    port: 3000
+    targetPort: rest
+    nodePort: 30006
+  - name: grpc
+    port: 50051
+    targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oneai-process
+  labels:
+    app: oneai-process
+spec:
+  strategy:
+    type: RollingUpdate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oneai-process
+  template:
+    metadata:
+      labels:
+        app: oneai-process
+    spec:
+      containers:
+      - name: oneai-process
+        image: oneai-process:latest
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: grpc
+          containerPort: 50051
+        - name: rest
+          containerPort: 3000
+        volumeMounts:
+        - name: data-volume
+          subPath: oneai/process-api/dip-kustomize/process/functions
+          mountPath: /flask-app/src/functions
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim: 
+            claimName: dataset-local

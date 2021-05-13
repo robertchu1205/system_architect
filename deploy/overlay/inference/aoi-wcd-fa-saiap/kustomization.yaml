@@ -1,0 +1,18 @@
+# apiVersion: kustomize.config.k8s.io/v1beta1
+# kind: Kustomization
+bases:
+- ../../../base/tfserving/overlay/sync_with_sftp
+- ../../../base/gateway/overlay/sync_with_sftp
+commonLabels:
+  project: aoi-wcd-fa-saiap
+patchesStrategicMerge:
+- deployment_resources.yaml
+- externalIPs.yaml
+# patches:
+# - patch: |-
+#     - op: replace
+#       path: /spec/template/spec/containers/0/resources/limits/cpu
+#       value: "5"
+#   target:
+#     kind: Deployment
+#     name: tfserving

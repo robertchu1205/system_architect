@@ -1,0 +1,45 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: wih-ssim-monitoring
+  labels:
+    prometheus: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app: ssim-monitoring
+  podMetricsEndpoints:
+  - targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wih-ssim-monitoring
+  labels:
+    app: ssim-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ssim-monitoring
+  template:
+    metadata:
+      labels:
+        app: ssim-monitoring
+    spec:
+      containers:
+      - name: monitoring
+        image: harbor-k8s.wzs.wistron.com.cn/dat/aoi-wih-ssim-monitoring:latest
+        imagePullPolicy: IfNotPresent   
+        ports:
+        - name: mp
+          containerPort: 8000
+        livenessProbe:
+          httpGet:
+            port: mp
+        readinessProbe:
+          httpGet:
+            port: mp

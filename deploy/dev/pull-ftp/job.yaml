@@ -1,0 +1,82 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pull-data-to-mysql-test
+  labels: 
+    app: pull-data-to-mysql
+    stage: test
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  completions: 1
+  template:
+    metadata:
+      labels: 
+        app: pull-data-to-mysql
+        stage: test
+    spec:
+      containers:
+      # - name: pull-data
+      #   image: harbor.wzs.wistron.com.cn/datteam/wget:latest
+      #   command:
+      #   - sh
+      #   - /pull-ftp.sh
+      #   env:
+      #   - name: IMAGE_FOLDER_PATH
+      #     value: /data/aoi-wzs-p3-dip-prewave-saiap/dip-prewave-saiap/
+      #   - name: USER
+      #     value: aoi-wzs-p3-dip-prewave-saiap
+      #   - name: PASSWORD
+      #     value: P3ftp@2020
+      #   - name: FTP
+      #     value: 10.41.241.5:30121
+      #   - name: SOURCE_DIR
+      #     value: dip-prewave-saiap
+      #   resources:
+      #     requests:
+      #       cpu: 50m
+      #       memory: 50M
+      #     limits: 
+      #       cpu: 200m
+      #       memory: 200M
+      #   volumeMounts:
+      #   - name: sh-py
+      #     subPath: pull-ftp.sh
+      #     mountPath: /pull-ftp.sh
+      #   - name: data-volume
+      #     subPath: aoi-wzs-p3-dip-prewave-saiap
+      #     mountPath: /data/aoi-wzs-p3-dip-prewave-saiap
+      - name: to-metadata
+        image: harbor.wzs.wistron.com.cn/datteam/image-dataset-db/to-metadata:20210115
+        command:
+        - /bin/sh
+        - -ec
+        - python /to-metadata.py
+        env:
+        - name: IMAGE_FOLDER_PATH
+          value: "/data/aoi-wzs-p3-dip-prewave-saiap/dip-prewave-saiap/"
+        - name: DB_PATH
+          value: "10.41.241.230:30003"
+        - name: database_table
+          value: "P3.dip_prewave"
+        - name: HOW_MANY_DAYS_AGO
+          value: "20"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100M
+          limits: 
+            cpu: 400m
+            memory: 400M
+        volumeMounts:
+        - name: data-volume
+          subPath: robert/deploy/dev/pull-ftp/base/file-to-cm/to-metadata.py
+          mountPath: /to-metadata.py
+        - name: data-volume
+          subPath: aoi-wzs-p3-dip-prewave-saiap
+          mountPath: /data/aoi-wzs-p3-dip-prewave-saiap
+      restartPolicy: Never 
+      volumes: 
+        - name: data-volume
+          persistentVolumeClaim: 
+            claimName: dataset-local

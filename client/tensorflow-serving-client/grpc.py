@@ -12,19 +12,13 @@ image_width = 224
 # For example: 10.41.65.77:8590
 parser = argparse.ArgumentParser(description='link & image amount')
 parser.add_argument('-l', '--link', dest='TFSERVER_URL', help='link of tfserving')
+# images in the assigned directory less than Batch size below would use all the images
 parser.add_argument('-i', '--image_path', dest='IMAGE_PATH', help='IMAGE_PATH')
 parser.add_argument('-b', '--batch_size', dest='BATCH_SIZE', help='BATCH_SIZE')
 parser.add_argument('-n', '--model_name', dest='MODEL_NAME', help='MODEL_NAME')
 parser.add_argument('-m', '--mode', default='saiap', dest='MODE', help='saiap OR normal OR image')
 parser.add_argument('-s', '--signature', default='classification', dest='SIG', help='Default classification')
 args = parser.parse_args()
-IMAGE_PATH = args.IMAGE_PATH
-TFSERVER_URL = args.TFSERVER_URL
-BATCH_SIZE = args.BATCH_SIZE
-MODEL_NAME = args.MODEL_NAME
-MODE = args.MODE
-SIG = args.SIG
-# images in the assigned directory less than Batch size below would use all the images
 
 # grpc method would serialize image input automatically
 # def image_array(filename):
@@ -60,7 +54,7 @@ def generate_angle(f): #get angle info from file name
 
 if __name__ == '__main__':
     filenames = []
-    for root, dirs, files in os.walk(IMAGE_PATH):
+    for root, dirs, files in os.walk(args.IMAGE_PATH):
        for img_file in files:
             if img_file.endswith('.png'):
                filenames.append(os.path.join(root, img_file))
@@ -68,25 +62,25 @@ if __name__ == '__main__':
                filenames.append(os.path.join(root, img_file))
             if img_file.endswith('.jpg'):
                filenames.append(os.path.join(root, img_file))
-    filenames = filenames[:int(BATCH_SIZE)]
+    filenames = filenames[:int(args.BATCH_SIZE)]
     for f in filenames:
         print(f)
     # put required data in 
     degree_data = ['0' for f in filenames]
-    if MODE == 'normal':
+    if args.MODE == 'normal':
         image_data = [open_image(f) for f in filenames]
-    elif MODE == 'image':
+    elif args.MODE == 'image':
         image_data = [image_array(f) for f in filenames]
         if len(image_data) > 1:
             image_data = np.array(image_data[0:len(image_data)], dtype=np.float32)
         else:
             image_data = np.array(image_data, dtype=np.float32)
-    elif MODE == 'saiap':
+    elif args.MODE == 'saiap':
         image_data = [saiap_open_image(f) for f in filenames]
     else:
         sys.exit('args "-m" is typed wrong. it needs to be normal or saiap or image')
     # setup grpc channel
-    channel = grpc.insecure_channel(TFSERVER_URL)
+    channel = grpc.insecure_channel(args.TFSERVER_URL)
     stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
     request = predict_pb2.PredictRequest()
     # names below is default, so it needs to change if defination is different
@@ -96,10 +90,10 @@ if __name__ == '__main__':
     # SAIAP
     # request.model_spec.version_label='stable'
     # request.model_spec.version.value=1595841209
-    request.model_spec.name = MODEL_NAME
-    request.model_spec.signature_name = SIG
+    request.model_spec.name = args.MODEL_NAME
+    request.model_spec.signature_name = args.SIG
     # pass all the necessary images below
-    if MODE == 'normal':
+    if args.MODE == 'normal':
         request.inputs['image'].CopyFrom(
             tf.make_tensor_proto(image_data, shape=[len(image_data)])
             # tf.contrib.util.make_tensor_proto(image_data, shape=[len(image_data)])
@@ -119,12 +113,12 @@ if __name__ == '__main__':
         request.inputs['voltage'].CopyFrom(
             tf.make_tensor_proto(degree_data, shape=[len(degree_data)])
         )
-    elif MODE == 'saiap':
+    elif args.MODE == 'saiap':
         request.inputs['string_array'].CopyFrom(
             tf.make_tensor_proto(image_data, shape=[len(image_data)])
             # tf.contrib.util.make_tensor_proto(image_data, shape=[len(image_data)])
         )
-    elif MODE == 'image':
+    elif args.MODE == 'image':
         request.inputs['input_1'].CopyFrom(
             tf.make_tensor_proto(image_data, dtype=tf.float32)
             # tf.contrib.util.make_tensor_proto(image_data, shape=[len(image_data)])
@@ -138,6 +132,7 @@ if __name__ == '__main__':
     # outputs = response.outputs['combined_outcome'].string_val -> also works
     
     results = {}
+    print(result)
     for key in result.outputs:
         tensor_proto = result.outputs[key]
         results[key] = tf.make_ndarray(tensor_proto)

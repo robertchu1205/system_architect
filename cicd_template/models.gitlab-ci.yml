@@ -1,19 +1,18 @@
 variables:
-  TFSERVING_IMAGE: harbor.wzs.wistron.com.cn/tensorflow/serving:2.3.0
-  AI_SERVER_USER: wzsdat
-  IP: 172.30.52.10
+  TFSERVING_IMAGE: harbor-k8s.wzs.wistron.com.cn/datteam/serving:2.3.0
+  AI_SERVER_USER: bigdata
+  IP: 10.41.242.29
   LIMIT_CPU: 2
   LIMIT_MEMORY: 2Gi
-  GRPC_NODE_PORT: 30002
-  REST_NODE_PORT: 30001
-  PROJECT_CODE: aoi-wzs-p3-ipbu-saiap
+  GRPC_NODE_PORT: 30010
+  REST_NODE_PORT: 30011
+  PROJECT_CODE: aoi-p1-dip-fa-oneai
   MULTI_MODELS: "true"
-  CONTAINER_PREFIX: dip
-  # GIT_SSL_NO_VERIFY: "true"
+  CONTAINER_PREFIX: oneai
+  GIT_SSL_NO_VERIFY: "true"
   KUBECONFIG_DIR: /home/${AI_SERVER_USER}/.kube/config
   TEMPLATE_PATH: /home/${AI_SERVER_USER}/dip-kustomize
   AI_MODELS_PATH: /home/${AI_SERVER_USER}/ai-models
-  # AI_MODELS_PATH: /home/${AI_SERVER_USER}/ai-models/robert_test_1012
   CHECKPOINT_CONFIG_PATH: /home/${AI_SERVER_USER}/checkpoint-config
   KUSTOMIZE_GIT_CLONE_SSH_URL: git@gitlab-k8s.wzs.wistron.com.cn:oneai/dip-kustomize.git
 
@@ -35,7 +34,7 @@ stages:
 # pre-config:
 #   variables:
 #     GIT_STRATEGY: none
-#   image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+#   image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
 #   #endeveit/docker-jq:latest
 #   stage: pre-config
 #   #artifacts:
@@ -82,7 +81,7 @@ stages:
 status:
   variables:
     GIT_STRATEGY: none
-  image: apnar/rsync-server:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/oneai/rsync-server:latest
   tags:
     - robert-gitlab-runner
   stage: status
@@ -112,7 +111,7 @@ status:
 sync-checkpoint-config:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: sync-checkpoint-config
@@ -140,7 +139,16 @@ sync-checkpoint-config:
     - chmod +x ./yq
     - cp ./yq /usr/bin
     - cat ./Model_config/parsing_config_json.sh
-    - if [[ -f "./Model_config/config.yaml" ]]; then cat ./Model_config/config.yaml && cd Model_config && ./parsing_config_json.sh config.yaml models.config; else cat ./Model_config/config.json && cd Model_config && ./parsing_config_json.sh config.json models.config; fi
+    - | 
+      if [[ -f "./Model_config/config.yml" ]] 
+      then 
+        cat ./Model_config/config.yml && cd Model_config && ./parsing_config_json.sh config.yml models.config 
+      elif [[ -f "./Model_config/config.yaml" ]] 
+      then
+        cat ./Model_config/config.yaml && cd Model_config && ./parsing_config_json.sh config.yaml models.config 
+      else 
+        cat ./Model_config/config.json && cd Model_config && ./parsing_config_json.sh config.json models.config
+      fi
     - cat models.config && rsync -rvzh --progress --delete models.config ${AI_SERVER_USER}@${IP}:${TEMPLATE_PATH}/models.config && cd ..
     - rsync -rvzh --progress --delete . ${AI_SERVER_USER}@${IP}:${CHECKPOINT_CONFIG_PATH}
     # - rsync -rvzh --progress --delete ./server.json ${IP}:/root/
@@ -163,7 +171,7 @@ sync-checkpoint-config:
 sync-aimodels:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: sync-aimodels
@@ -223,7 +231,7 @@ if-only-a-model:
 .sync-template:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: sync-template
@@ -281,7 +289,7 @@ if-only-a-model:
 gen-tfserving:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: gen-tfserving

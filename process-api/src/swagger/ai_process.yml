@@ -1,0 +1,51 @@
+Dynamic load module and execute funtions sequentially and then return the result
+---
+tags:
+  - AI Process
+parameters:
+  - name: process_name
+    in: path
+    type: string
+    description: pre-process or post-process
+  - name: body
+    in: body
+    schema:
+      type: object
+      properties:
+        input:
+          type: object
+          description: input for first function
+        processes:
+          type: array
+          items: 
+            type: string
+            description: function name
+responses:
+  200:
+    description: Result and all records during executing functions
+    schema:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          description: 200
+        error:
+          type: boolean
+          description: false
+        data:
+          type: object
+          properties:
+            records:
+              type: array
+              items: 
+                type: object
+                properties:
+                  process:
+                    type: string
+                  result:
+                    type: string
+            result:
+              type: object
+        message:
+          type: string
+          description: OK

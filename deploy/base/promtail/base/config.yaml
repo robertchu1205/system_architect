@@ -31,29 +31,26 @@ scrape_configs:
   - docker: {}
   - json:
       expressions:
+        level:
+        model_name:
+        time:
         component:
-        PanelNo:
         location:
-        eagle:
-        SN:
+        sn:
         capacity:
         degree:
         voltage:
-        index:
-        req_time:
         date:
-        res_time:
         filename:
         msg:
         pred_class:
         confidence:
         ng_model_name:
-        own_pred_class:
-        own_confidence:
         severity:
         logger:
-        req_secs_taken:
         project:
+        pred:
+        client_ip:
         # type:
         # request:
         # protocol:
@@ -69,40 +66,14 @@ scrape_configs:
         # response_content_type:
         # response_sent_at: 
   - labels:
+      level:
+      model_name:
       component:
-      PanelNo:
       location:
-      eagle:
-      SN:
-      capacity:
-      degree:
-      voltage:
-      index:
-      req_time:
-      date:
-      res_time:
+      sn:
       filename:
-      msg:
       pred_class:
-      confidence:
-      ng_model_name:
-      own_pred_class:
-      own_confidence:
       severity:
       logger:
-      req_secs_taken:
       project:
-      # type:
-      # request:
-      # protocol:
-      # method:
-      # remote_ip:
-      # request_size_b:
-      # remote_host:
-      # remote_port:
-      # response_time_ms:
-      # request_received_at:
-      # response_status:
-      # response_size_b:
-      # response_content_type:
-      # response_sent_at: 
+      client_ip:

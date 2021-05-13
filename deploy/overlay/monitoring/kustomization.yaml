@@ -1,0 +1,49 @@
+resources:
+- ../../base/prometheus/base
+- ../../base/grafana/base
+- ../../base/loki/base
+- ../../base/promtail/base
+commonLabels:
+  project: aoi-wcd-fa-saiap
+  function: monitoring
+# namePrefix: aoi-wcd-fa-saiap-
+# configMapGenerator:
+# - name: service-name
+#   envs:
+#   - service-name
+vars:
+- name: LOKI_SERVICE
+  objRef:
+    apiVersion: v1
+    kind: Service
+    name: loki
+  fieldref:
+    fieldpath: metadata.name
+- name: PROMETHEUS_SERVICE
+  objRef:
+    apiVersion: v1
+    kind: Service
+    name: prometheus
+# - name: GATEWAY_NAME
+#   objRef:
+#     version: v1
+#     kind: ConfigMap
+#     name: service-name
+#   fieldRef:
+#     fieldPath: data.gateway-name
+patchesStrategicMerge:
+- externalIPs.yaml
+# patchesStrategicMerge:
+# - |
+#   apiVersion: monitoring.coreos.com/v1
+#   kind: Prometheus
+#   metadata:
+#     name: prometheus
+#   spec:
+#     securityContext:
+#       fsGroup: 0
+#       runAsNonRoot: false
+#       runAsUser: 0
+configurations:
+- kustomizeconfig.yaml
+    

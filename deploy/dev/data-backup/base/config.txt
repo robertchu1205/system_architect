@@ -1,0 +1,3 @@
+BACKUP_NAME=all
+BACKUP_PATH=/backup/aoi-wzs-p3-dip-prewave-saiap
+SRC_PATH=/data/aoi-wzs-p3-dip-prewave-saiap

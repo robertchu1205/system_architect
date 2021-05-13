@@ -6,7 +6,7 @@ def parse_image_filename(filename):
         possible_bool = False
         symbols.update({'filename': filename}) # 20201224000000_CN0RM5DRWS20007600PAA00_Screw1_270_220_NA.jpg
         filename = os.path.splitext(filename)[0]
-        possible_comps = ['Screw', 'DIMM']
+        possible_comps = ['Screw', 'DIMM', 'Logo', 'OP3080', 'CPU']
         symbols.update({'timestamp': filename.split('_')[0]}) # 20201224000000
         symbols.update({'SN': filename.split('_')[1]}) # CN0RM5DRWS20007600PAA00
         symbols.update({'location': filename.split('_')[2]}) # Screw1

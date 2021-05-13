@@ -1,6 +1,6 @@
 variables:
-  GATEWAY_IMAGE: harbor.wzs.wistron.com.cn/datteam/dip-gateway:latest
-  PROCESS_IMAGE: harbor.wzs.wistron.com.cn/oneai/oneai-process:1.1.0
+  GATEWAY_IMAGE: harbor-k8s.wzs.wistron.com.cn/datteam/dip-gateway:latest
+  PROCESS_IMAGE: harbor-k8s.wzs.wistron.com.cn/datteam/oneai-process:1.1.0
   AI_SERVER_USER: wzsdat
   IP: 172.30.52.10
   LIMIT_CPU: 1
@@ -8,13 +8,12 @@ variables:
   GW_NODE_PORT: "3333"
   PROJECT_CODE: aoi-wzs-p3-ipbu-saiap
   CONTAINER_PREFIX: dip
-  # GIT_SSL_NO_VERIFY: "true"
+  GIT_SSL_NO_VERIFY: "true"
   KUBECONFIG_DIR: /home/${AI_SERVER_USER}/.kube/config
   TEMPLATE_PATH: /home/${AI_SERVER_USER}/dip-kustomize
   FUNCTIONS_PATH: /home/${AI_SERVER_USER}/dip-kustomize/process/functions
   AIPREDICT_PATH: /home/${AI_SERVER_USER}/AIpredict
   CHECKPOINT_CONFIG_PATH: /home/${AI_SERVER_USER}/checkpoint-config
-  # KUSTOMIZE_GIT_CLONE_SSH_URL: git@gitlab-k8s.wzs.wistron.com.cn:oneai/dip-kustomize.git
 
 #cache:
 #  key: "PIPELINE-${CI_COMMIT_TAG}"
@@ -35,7 +34,7 @@ stages:
 # pre-config:
 #   variables:
 #     GIT_STRATEGY: none
-#   image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+#   image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
 #   #endeveit/docker-jq:latest
 #   stage: pre-config
 #   #artifacts:
@@ -82,7 +81,7 @@ stages:
 status:
   variables:
     GIT_STRATEGY: none
-  image: apnar/rsync-server:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/oneai/rsync-server:latest
   tags:
     - robert-gitlab-runner
   stage: status
@@ -109,7 +108,7 @@ status:
 sync-checkpoint-config:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: sync-checkpoint-config
@@ -159,7 +158,7 @@ if-gw-load-balancer:
 .sync-template:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: sync-template
@@ -200,7 +199,7 @@ if-gw-load-balancer:
 gen-process:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: gen-process
@@ -245,7 +244,7 @@ gen-process:
 gen-gateway:
   variables:
     GIT_STRATEGY: none
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: gen-gateway
@@ -273,6 +272,7 @@ gen-gateway:
     - export GATEWAY_STATUS=`ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} get deploy ${CONTAINER_PREFIX}-gateway`
     - if [[ $GATEWAY_STATUS =~ ^.*0/1.*$ ]]; then exit 1; fi
     - curl -kL http://${IP}:${GW_NODE_PORT}/showconfig
+    # - ssh -tt ${AI_SERVER_USER}@${IP} kubectl --kubeconfig ${KUBECONFIG_DIR} rollout restart deploy ${CONTAINER_PREFIX}-gateway
   only:
     refs:
       - /^Model-v[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9]$/
@@ -282,7 +282,7 @@ deploy-dashboards:
     GIT_STRATEGY: none
     NOT_FOUND_MSG: "No resources found"
     NOT_FOUND_SC: "Error from server (NotFound)"
-  image: harbor.wzs.wistron.com.cn/oneai/alice2.0:latest
+  image: harbor-k8s.wzs.wistron.com.cn/datteam/alice2.0:latest
   tags:
     - robert-gitlab-runner
   stage: deploy-dashboards

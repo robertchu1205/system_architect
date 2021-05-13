@@ -1,0 +1,10 @@
+namePrefix: aoi-wzs-p3-dip-prewave-saiap-
+resources:
+- cronjob-raid-data-backup-data.yaml  
+commonLabels:
+  role: backup 
+  data: aoi-wzs-p3-dip-prewave-saiap
+configMapGenerator:
+- name: backup-data-config
+  envs:
+  - config.txt

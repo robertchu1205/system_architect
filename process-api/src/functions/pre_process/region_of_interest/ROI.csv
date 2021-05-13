@@ -1,0 +1,5 @@
+kb_model,location,maximum_long_side,minimum_long_side,maximum_short_side,minimum_short_side,maximum_aspect_ratio,minimum_aspect_ratio,accept_angle,keep,extend_pixel_above,extend_pixel_below,extend_pixel_left,extend_pixel_right,central_crop_height,central_crop_width
+.*,RC.*,,,,,,,,FALSE,,,,,,
+.*,CR.*,,,,,,,,FALSE,,,,,,
+.*,R.*,1000,1,800,1,1,0,45 135 90 0,,10,10,10,10,100,200
+.*,.R.*,1000,1,800,1,1,0,0 90 180 270,,0,0,0,0,,

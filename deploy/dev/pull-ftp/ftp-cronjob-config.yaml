@@ -1,0 +1,22 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+# configmaps "aoi-wzs-p3-dip-prewave-saiap-ftp-cronjob-config" was not valid:
+# * patch: Invalid value: "map[data:map[HOW_MANY_DAYS_AGO:7]]": cannot convert int64 to string
+#
+apiVersion: v1
+data:
+  DB_PATH: /data/aoi-wzs-p3-dip-prewave-saiap/metadata.db
+  FTP: 10.41.241.5:30121
+  IMAGE_FOLDER_PATH: /data/aoi-wzs-p3-dip-prewave-saiap/dip-prewave-saiap/
+  SOURCE_DIR: dip-prewave-saiap
+  HOW_MANY_DAYS_AGO: "7"
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2020-05-15T06:22:09Z"
+  name: aoi-wzs-p3-dip-prewave-saiap-ftp-cronjob-config
+  namespace: default
+  resourceVersion: "22953090"
+  selfLink: /api/v1/namespaces/default/configmaps/aoi-wzs-p3-dip-prewave-saiap-ftp-cronjob-config
+  uid: 27cb175c-da7e-48c5-ab31-a628c313e07f

@@ -1,0 +1,33 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-data
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  schedule: 0 0 * * 0
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - envFrom:
+            - configMapRef:
+                name: backup-data-config
+            image: harbor.wzs.wistron.com.cn/datteam/rsync
+            imagePullPolicy: Always
+            name: rsync
+            volumeMounts:
+            - mountPath: /data
+              name: data
+            - mountPath: /backup
+              name: backup
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: dataset-local
+          - name: backup
+            persistentVolumeClaim:
+              claimName: dataset-backup-local

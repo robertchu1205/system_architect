@@ -1,0 +1,26 @@
+#docker build -t repo.devpack.cc/mre200/oneai-process . 
+#docker run -d  --name oneai-process --rm -it -p 3000:3000 -p 50051:50051 -v /home/ai-thedream/OneAI/config/:/config -v /home/ai-thedream/OneAI/OneAI-process/src/functions:/flask-app/src/functions repo.devpack.cc/mre200/oneai-process
+
+
+FROM tiangolo/uwsgi-nginx:python3.7
+RUN pip install flask
+
+# URL under which static (not modified by Python) files will be requested
+# They will be served by Nginx directly, without being handled by uWSGI
+ENV STATIC_URL /static
+# Absolute path in where the static files wil be
+ENV STATIC_PATH /app/static
+
+# If STATIC_INDEX is 1, serve / with /static/index.html directly (or the static URL configured)
+# ENV STATIC_INDEX 1
+ENV STATIC_INDEX 0
+
+# Make /app/* available to be imported by Python globally to better support several use cases like Alembic migrations.
+ENV PYTHONPATH=/app
+RUN apt-get update -y
+RUN apt update
+RUN apt install libgl1-mesa-glx -y
+RUN pip install numpy
+ADD . /flask-app
+WORKDIR /flask-app
+RUN pip install -r requirements.txt

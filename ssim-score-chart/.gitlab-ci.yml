@@ -1,0 +1,29 @@
+variables:
+  HARBOR_REGISTRY: "harbor-k8s.wzs.wistron.com.cn"
+  IMAGE_NAME: "dat/aoi-wih-ssim-monitoring"
+  GIT_SSL_NO_VERIFY: "true"
+
+stages:
+- build
+
+build-image:
+  stage: build
+  image:
+    name: harbor.wzs.wistron.com.cn/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+  - echo $HARBOR_LOGIN > /kaniko/.docker/config.json
+  script:
+  - TAG=${CI_COMMIT_SHORT_SHA}
+  - echo TAG:$TAG
+  - echo "starting building latest image"
+  - |
+    /kaniko/executor \
+    --dockerfile=${CI_PROJECT_DIR}/simple/Dockerfile \
+    --context=${CI_PROJECT_DIR}/simple \
+    --destination=${HARBOR_REGISTRY}/${IMAGE_NAME}:${TAG} \
+    --insecure \
+    --insecure-pull
+  only:
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /tobuild-*/
